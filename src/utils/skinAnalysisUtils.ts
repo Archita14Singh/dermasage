@@ -1,5 +1,5 @@
 
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 import { loadSkinAnalysisModel } from './modelLoader';
 
 // In a production app, this would use a real ML model for analysis

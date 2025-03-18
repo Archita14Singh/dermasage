@@ -1,5 +1,5 @@
 
-import { toast } from '@/components/ui/sonner';
+import { toast } from 'sonner';
 
 // In a real app, this would load the actual ML model
 // For the prototype, we'll simulate loading
