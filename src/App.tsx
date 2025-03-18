@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,7 @@ import Index from "./pages/Index";
 import Chat from "./pages/Chat";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
+import DatasetPage from './pages/Dataset';
 
 const queryClient = new QueryClient();
 
@@ -21,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/chat" element={<Chat />} />
           <Route path="/progress" element={<Progress />} />
+          <Route path="/dataset" element={<DatasetPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
