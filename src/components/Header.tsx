@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useTheme } from '@/context/ThemeContext';
@@ -19,7 +20,7 @@ const Header: React.FC = () => {
     <header className="bg-background border-b sticky top-0 z-50">
       <div className="container flex h-16 items-center justify-between py-4">
         <Link to="/" className="font-bold text-2xl">
-          SkinWise
+          DermaSage
         </Link>
         
         <nav className="flex items-center space-x-6">
