@@ -9,6 +9,7 @@ import { analyzeSkinCondition } from '@/utils/skinAnalysisUtils';
 import AnalysisResult from './AnalysisResult';
 import ImageUpload from './ImageUpload';
 import LoadingOverlay from './LoadingOverlay';
+import { useNavigate } from 'react-router-dom';
 
 type AnalysisStatus = 'idle' | 'loading' | 'analyzing' | 'complete' | 'error';
 
@@ -16,6 +17,7 @@ const SkinAnalysis: React.FC = () => {
   const [image, setImage] = useState<string | null>(null);
   const [status, setStatus] = useState<AnalysisStatus>('idle');
   const [analysisResults, setAnalysisResults] = useState<any>(null);
+  const navigate = useNavigate();
   
   const handleImageSelected = async (imageData: string) => {
     setImage(imageData);
@@ -46,6 +48,15 @@ const SkinAnalysis: React.FC = () => {
     setImage(null);
     setStatus('idle');
     setAnalysisResults(null);
+  };
+
+  const handleDiscussWithAI = () => {
+    if (analysisResults && image) {
+      // Store analysis results in sessionStorage to pass to chatbot
+      sessionStorage.setItem('skinAnalysisResults', JSON.stringify(analysisResults));
+      sessionStorage.setItem('skinAnalysisImage', image);
+      navigate('/chat');
+    }
   };
   
   const renderContent = () => {
@@ -98,6 +109,15 @@ const SkinAnalysis: React.FC = () => {
           </div>
           
           <AnalysisResult results={analysisResults} />
+          
+          <div className="flex justify-center mt-4">
+            <Button 
+              onClick={handleDiscussWithAI}
+              className="bg-skin-purple hover:bg-skin-purple/90"
+            >
+              Discuss Results with AI Assistant
+            </Button>
+          </div>
         </div>
       );
     }

@@ -12,13 +12,22 @@ const Chatbot: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "Hi there! I'm SkinWise's AI assistant. How can I help with your skincare needs today?",
+      content: "Hi there! I'm DermaSage's AI assistant. How can I help with your skincare needs today?",
       sender: 'bot',
       timestamp: new Date(),
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const initializedRef = useRef(false);
+  
+  useEffect(() => {
+    // Check for stored analysis results when component mounts
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      checkForStoredAnalysisResults();
+    }
+  }, []);
   
   useEffect(() => {
     // Scroll to bottom whenever messages change
@@ -29,6 +38,44 @@ const Chatbot: React.FC = () => {
       }
     }
   }, [messages]);
+  
+  const checkForStoredAnalysisResults = async () => {
+    const storedResults = sessionStorage.getItem('skinAnalysisResults');
+    const storedImage = sessionStorage.getItem('skinAnalysisImage');
+    
+    if (storedResults && storedImage) {
+      // Clear the stored results to prevent them from being used again
+      sessionStorage.removeItem('skinAnalysisResults');
+      sessionStorage.removeItem('skinAnalysisImage');
+      
+      // Add the analysis results to the chat
+      const analysisResults = JSON.parse(storedResults);
+      
+      // Add user message with the image
+      const userMessage: Message = {
+        id: Date.now().toString(),
+        content: "I just had my skin analyzed. Can you explain the results?",
+        sender: 'user',
+        timestamp: new Date(),
+        image: storedImage,
+      };
+      
+      setMessages(prev => [...prev, userMessage]);
+      
+      // Show typing indicator
+      setIsLoading(true);
+      
+      try {
+        // Process the analysis results
+        const botMessage = await ChatService.processAnalysisResults(analysisResults);
+        setMessages(prev => [...prev, botMessage]);
+      } catch (error) {
+        console.error('Error processing analysis results:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
   
   const handleSendMessage = async (inputText: string, imageData: string | null = null) => {
     // Add user message

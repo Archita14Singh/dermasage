@@ -1,6 +1,7 @@
 
 import { Message } from '@/types/chat';
 import SkinConditionService from './SkinConditionService';
+import { AnalysisResult } from '@/utils/skinAnalysisUtils';
 
 class ChatService {
   static processTextMessage(inputText: string): Promise<string> {
@@ -51,6 +52,34 @@ class ChatService {
       return {
         id: Date.now().toString(),
         content: "I'm sorry, I had trouble analyzing that image. Could you try uploading a clearer photo with good lighting?",
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+    }
+  }
+
+  static async processAnalysisResults(analysisResults: AnalysisResult): Promise<Message> {
+    try {
+      // Format the response based on the analysis
+      const response = SkinConditionService.formatAnalysisForChat(analysisResults);
+      
+      // Add additional personalized message
+      const personalizedResponse = `I see you've just completed a skin analysis! ${response}\n\nIs there anything specific about these results you'd like me to explain in more detail?`;
+      
+      // Return the formatted bot message
+      return {
+        id: Date.now().toString(),
+        content: personalizedResponse,
+        sender: 'bot',
+        timestamp: new Date(),
+      };
+    } catch (error) {
+      console.error('Error processing analysis results:', error);
+      
+      // Return error message
+      return {
+        id: Date.now().toString(),
+        content: "I noticed you've completed a skin analysis, but I'm having trouble processing the results. Could you tell me what specific skin concerns you'd like help with?",
         sender: 'bot',
         timestamp: new Date(),
       };

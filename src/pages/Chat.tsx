@@ -18,7 +18,7 @@ const Chat = () => {
             Chat with Your Personal <span className="bg-gradient-to-r from-primary to-accent-foreground bg-clip-text text-transparent">Skin Expert</span>
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Ask questions, get personalized recommendations, and upload photos for real-time skin analysis.
+            Ask questions, get personalized recommendations, and upload photos for real-time skin analysis. Your skin analysis results will automatically appear here if you've just completed one!
           </p>
         </section>
         
