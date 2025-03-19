@@ -1,4 +1,3 @@
-
 import React from 'react';
 import Header from '@/components/Header';
 import ProgressTracker from '@/components/ProgressTracker';
@@ -29,7 +28,7 @@ const Progress = () => {
       
       <footer className="py-8 border-t text-center text-sm text-muted-foreground bg-white/50 backdrop-blur-sm">
         <div className="container">
-          <p>© 2023 SkinWise. All rights reserved.</p>
+          <p>© 2024 DermaSage. All rights reserved.</p>
         </div>
       </footer>
     </div>
