@@ -91,14 +91,18 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           <img
             src={previewImage}
             alt="Uploaded"
-            className="max-h-48 w-auto object-cover rounded-lg"
+            className="max-h-48 w-auto mx-auto object-contain rounded-lg"
           />
           {onReset && (
             <Button
               size="icon"
               variant="secondary"
               className="absolute top-2 right-2 rounded-full bg-white/80 shadow-sm hover:bg-white"
-              onClick={onReset}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onReset();
+              }}
             >
               <X className="w-4 h-4" />
             </Button>
@@ -125,7 +129,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button 
-              onClick={() => fileInputRef.current?.click()}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                fileInputRef.current?.click();
+              }}
               className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
             >
               <Upload className="w-4 h-4 mr-2" />

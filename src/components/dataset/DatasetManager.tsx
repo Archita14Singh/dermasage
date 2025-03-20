@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Dataset } from '@/types/dataset';
 import DatasetService from '@/services/DatasetService';
 import DatasetViewer from './DatasetViewer';
+import { toast } from 'sonner';
 
 const DatasetManager: React.FC = () => {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -26,8 +27,18 @@ const DatasetManager: React.FC = () => {
     const loadedDatasets = DatasetService.getDatasets();
     setDatasets(loadedDatasets);
     
+    // If we have a selected dataset, refresh it with the latest data
+    if (selectedDataset) {
+      const updatedDataset = loadedDatasets.find(d => d.id === selectedDataset.id);
+      if (updatedDataset) {
+        setSelectedDataset(updatedDataset);
+      } else {
+        // If the selected dataset no longer exists, select the first dataset
+        setSelectedDataset(loadedDatasets.length > 0 ? loadedDatasets[0] : null);
+      }
+    } 
     // Select the first dataset if one exists and none is selected
-    if (loadedDatasets.length > 0 && !selectedDataset) {
+    else if (loadedDatasets.length > 0 && !selectedDataset) {
       setSelectedDataset(loadedDatasets[0]);
     }
   };
@@ -40,7 +51,7 @@ const DatasetManager: React.FC = () => {
       newDatasetDescription.trim()
     );
     
-    setDatasets(prevDatasets => [...prevDatasets, newDataset]);
+    loadDatasets();
     setSelectedDataset(newDataset);
     setIsCreateDialogOpen(false);
     resetForm();
@@ -51,26 +62,28 @@ const DatasetManager: React.FC = () => {
       const success = DatasetService.deleteDataset(id);
       
       if (success) {
-        const updatedDatasets = datasets.filter(d => d.id !== id);
-        setDatasets(updatedDatasets);
-        
-        if (selectedDataset?.id === id) {
-          setSelectedDataset(updatedDatasets.length > 0 ? updatedDatasets[0] : null);
-        }
+        loadDatasets();
       }
     }
   };
   
   const exportDataset = (dataset: Dataset) => {
-    const dataStr = JSON.stringify(dataset, null, 2);
-    const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
-    
-    const exportFileDefaultName = `${dataset.name.replace(/\s+/g, '_')}_dataset.json`;
-    
-    const linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataUri);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
+    try {
+      const dataStr = JSON.stringify(dataset, null, 2);
+      const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
+      
+      const exportFileDefaultName = `${dataset.name.replace(/\s+/g, '_')}_dataset.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      toast.success('Dataset exported successfully');
+    } catch (error) {
+      console.error('Error exporting dataset:', error);
+      toast.error('Failed to export dataset');
+    }
   };
   
   const resetForm = () => {
@@ -80,11 +93,6 @@ const DatasetManager: React.FC = () => {
   
   const handleDatasetUpdated = () => {
     loadDatasets();
-    if (selectedDataset) {
-      // Refresh the selected dataset
-      const updated = DatasetService.getDataset(selectedDataset.id);
-      if (updated) setSelectedDataset(updated);
-    }
   };
   
   return (
@@ -178,7 +186,10 @@ const DatasetManager: React.FC = () => {
       </div>
       
       {/* Create Dataset Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog open={isCreateDialogOpen} onOpenChange={(open) => {
+        setIsCreateDialogOpen(open);
+        if (!open) resetForm();
+      }}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Create New Dataset</DialogTitle>
@@ -209,7 +220,10 @@ const DatasetManager: React.FC = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsCreateDialogOpen(false);
+              resetForm();
+            }}>
               Cancel
             </Button>
             <Button onClick={handleCreateDataset} disabled={!newDatasetName.trim()}>

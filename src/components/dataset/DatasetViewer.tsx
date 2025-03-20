@@ -270,7 +270,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       </Dialog>
       
       {/* Add Image Dialog */}
-      <Dialog open={isAddImageDialogOpen} onOpenChange={setIsAddImageDialogOpen}>
+      <Dialog open={isAddImageDialogOpen} onOpenChange={(open) => {
+        setIsAddImageDialogOpen(open);
+        if (!open) resetImageForm();
+      }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Image to Dataset</DialogTitle>
@@ -335,7 +338,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddImageDialogOpen(false)}>
+            <Button variant="outline" onClick={() => {
+              setIsAddImageDialogOpen(false);
+              resetImageForm();
+            }}>
               Cancel
             </Button>
             <Button 
