@@ -21,17 +21,27 @@ class DatasetService {
       });
     } catch (error) {
       console.error('Error loading datasets:', error);
+      toast.error('Failed to load datasets');
       return [];
     }
   }
   
   // Save all datasets
   private static saveDatasets(datasets: Dataset[]): void {
-    localStorage.setItem(this.STORAGE_KEY, JSON.stringify(datasets));
+    try {
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(datasets));
+    } catch (error) {
+      console.error('Error saving datasets:', error);
+      toast.error('Failed to save datasets');
+    }
   }
   
   // Create a new dataset
   static createDataset(name: string, description: string): Dataset {
+    if (!name.trim()) {
+      throw new Error('Dataset name is required');
+    }
+    
     const datasets = this.getDatasets();
     
     const newDataset: Dataset = {
@@ -52,12 +62,19 @@ class DatasetService {
   
   // Get a dataset by ID
   static getDataset(id: string): Dataset | undefined {
+    if (!id) return undefined;
+    
     const datasets = this.getDatasets();
     return datasets.find(dataset => dataset.id === id);
   }
   
   // Add an image to a dataset
   static addImageToDataset(datasetId: string, imageData: string, label: string, condition?: string, severity?: 'low' | 'moderate' | 'high'): DatasetImage | null {
+    if (!datasetId || !imageData || !label.trim()) {
+      toast.error('Missing required data for adding image');
+      return null;
+    }
+    
     const datasets = this.getDatasets();
     const datasetIndex = datasets.findIndex(d => d.id === datasetId);
     
@@ -69,8 +86,8 @@ class DatasetService {
     const newImage: DatasetImage = {
       id: crypto.randomUUID(),
       imageUrl: imageData,
-      label,
-      condition,
+      label: label.trim(),
+      condition: condition?.trim(),
       severity,
       dateAdded: new Date()
     };
@@ -86,6 +103,11 @@ class DatasetService {
   
   // Remove an image from a dataset
   static removeImageFromDataset(datasetId: string, imageId: string): boolean {
+    if (!datasetId || !imageId) {
+      toast.error('Missing dataset or image ID');
+      return false;
+    }
+    
     const datasets = this.getDatasets();
     const datasetIndex = datasets.findIndex(d => d.id === datasetId);
     
@@ -113,6 +135,11 @@ class DatasetService {
   
   // Delete a dataset
   static deleteDataset(id: string): boolean {
+    if (!id) {
+      toast.error('Missing dataset ID');
+      return false;
+    }
+    
     const datasets = this.getDatasets();
     const initialCount = datasets.length;
     
@@ -131,6 +158,11 @@ class DatasetService {
   
   // Update dataset details
   static updateDataset(id: string, updates: { name?: string; description?: string }): Dataset | null {
+    if (!id) {
+      toast.error('Missing dataset ID');
+      return null;
+    }
+    
     const datasets = this.getDatasets();
     const datasetIndex = datasets.findIndex(d => d.id === id);
     
@@ -139,12 +171,12 @@ class DatasetService {
       return null;
     }
     
-    if (updates.name) {
-      datasets[datasetIndex].name = updates.name;
+    if (updates.name !== undefined) {
+      datasets[datasetIndex].name = updates.name.trim();
     }
     
-    if (updates.description) {
-      datasets[datasetIndex].description = updates.description;
+    if (updates.description !== undefined) {
+      datasets[datasetIndex].description = updates.description.trim();
     }
     
     datasets[datasetIndex].updatedAt = new Date();

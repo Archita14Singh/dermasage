@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit, Plus, Trash2, InfoIcon } from 'lucide-react';
 import { 
   Card, CardContent, CardHeader, CardTitle, CardDescription 
@@ -14,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dataset, DatasetImage } from '@/types/dataset';
 import DatasetService from '@/services/DatasetService';
 import ImageUpload from '../ImageUpload';
+import { toast } from 'sonner';
 
 interface DatasetViewerProps {
   dataset: Dataset;
@@ -34,6 +34,11 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
   const [newImageCondition, setNewImageCondition] = useState('');
   const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | ''>('');
   
+  useEffect(() => {
+    setEditedName(dataset.name);
+    setEditedDescription(dataset.description);
+  }, [dataset]);
+  
   const handleSaveEdit = () => {
     if (editedName.trim()) {
       DatasetService.updateDataset(dataset.id, {
@@ -47,19 +52,28 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
   };
   
   const handleAddImage = () => {
-    if (!uploadedImage || !newImageLabel.trim()) return;
+    if (!uploadedImage || !newImageLabel.trim()) {
+      toast.error('Please upload an image and provide a label');
+      return;
+    }
     
-    DatasetService.addImageToDataset(
-      dataset.id,
-      uploadedImage,
-      newImageLabel.trim(),
-      newImageCondition || undefined,
-      newImageSeverity as 'low' | 'moderate' | 'high' | undefined
-    );
-    
-    resetImageForm();
-    onDatasetUpdated();
-    setIsAddImageDialogOpen(false);
+    try {
+      DatasetService.addImageToDataset(
+        dataset.id,
+        uploadedImage,
+        newImageLabel.trim(),
+        newImageCondition.trim() || undefined,
+        newImageSeverity as 'low' | 'moderate' | 'high' | undefined
+      );
+      
+      toast.success('Image added successfully');
+      resetImageForm();
+      onDatasetUpdated();
+      setIsAddImageDialogOpen(false);
+    } catch (error) {
+      console.error('Error adding image:', error);
+      toast.error('Failed to add image to dataset');
+    }
   };
   
   const handleDeleteImage = (imageId: string) => {
@@ -79,7 +93,6 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     setNewImageSeverity('');
   };
   
-  // Reset form state when dialog is opened to ensure fresh state
   const handleOpenAddImageDialog = () => {
     resetImageForm();
     setIsAddImageDialogOpen(true);
@@ -125,7 +138,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
                 <p className="text-muted-foreground mb-6 max-w-md">
                   This dataset doesn't have any images. Add some images to start building your dataset.
                 </p>
-                <Button onClick={() => setIsAddImageDialogOpen(true)}>
+                <Button onClick={handleOpenAddImageDialog}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add First Image
                 </Button>
@@ -146,7 +159,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
                           variant="destructive" 
                           size="icon" 
                           className="h-8 w-8"
-                          onClick={() => handleDeleteImage(image.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteImage(image.id);
+                          }}
                         >
                           <Trash2 className="w-4 h-4" />
                         </Button>
@@ -171,7 +187,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
                 <p className="text-muted-foreground mb-6 max-w-md">
                   This dataset doesn't have any images. Add some images to start building your dataset.
                 </p>
-                <Button onClick={() => setIsAddImageDialogOpen(true)}>
+                <Button onClick={handleOpenAddImageDialog}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add First Image
                 </Button>
@@ -235,7 +251,6 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         </Tabs>
       </CardContent>
       
-      {/* Edit Dataset Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -275,7 +290,6 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         </DialogContent>
       </Dialog>
       
-      {/* Add Image Dialog */}
       <Dialog 
         open={isAddImageDialogOpen} 
         onOpenChange={(open) => {
@@ -365,7 +379,6 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         </DialogContent>
       </Dialog>
       
-      {/* Image Preview Dialog */}
       <Dialog open={!!selectedImage} onOpenChange={(open) => !open && setSelectedImage(null)}>
         {selectedImage && (
           <DialogContent className="sm:max-w-2xl">

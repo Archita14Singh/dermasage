@@ -66,6 +66,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     reader.onload = (e) => {
       if (e.target?.result) {
         onImageSelected(e.target.result.toString());
+        // Clear input to allow selecting the same file again
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
       }
     };
     
@@ -78,6 +82,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   
   const handleCapture = () => {
     if (fileInputRef.current) {
+      fileInputRef.current.value = '';
       fileInputRef.current.click();
     }
   };
@@ -87,7 +92,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   return (
     <div className="w-full">
       {showPreview && previewImage ? (
-        <div className="relative rounded-lg overflow-hidden">
+        <div className="relative rounded-lg overflow-hidden bg-white">
           <img
             src={previewImage}
             alt="Uploaded"
@@ -101,6 +106,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
                 onReset();
               }}
             >
