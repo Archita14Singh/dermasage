@@ -85,7 +85,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   const isDragActive = typeof externalDragActive !== 'undefined' ? externalDragActive : dragActive;
   
   return (
-    <>
+    <div className="w-full">
       {showPreview && previewImage ? (
         <div className="relative rounded-lg overflow-hidden">
           <img
@@ -120,7 +120,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           onDragOver={handleDrag}
           onDrop={handleDrop}
         >
-          <div className="w-16 h-16 bg-skin-blue/20 rounded-full flex items-center justify-center mb-4 animate-float">
+          <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
             <Upload className="w-8 h-8 text-primary" />
           </div>
           <h3 className="text-lg font-medium mb-2">Upload your image</h3>
@@ -132,7 +132,10 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
               onClick={(e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                fileInputRef.current?.click();
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                  fileInputRef.current.click();
+                }
               }}
               className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
             >
@@ -153,7 +156,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           />
         </div>
       )}
-    </>
+    </div>
   );
 };
 

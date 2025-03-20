@@ -79,6 +79,12 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     setNewImageSeverity('');
   };
   
+  // Reset form state when dialog is opened to ensure fresh state
+  const handleOpenAddImageDialog = () => {
+    resetImageForm();
+    setIsAddImageDialogOpen(true);
+  };
+  
   return (
     <Card className="h-full flex flex-col glass-card">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -93,7 +99,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
-          <Button size="sm" onClick={() => setIsAddImageDialogOpen(true)}>
+          <Button size="sm" onClick={handleOpenAddImageDialog}>
             <Plus className="w-4 h-4 mr-2" />
             Add Image
           </Button>
@@ -270,10 +276,15 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       </Dialog>
       
       {/* Add Image Dialog */}
-      <Dialog open={isAddImageDialogOpen} onOpenChange={(open) => {
-        setIsAddImageDialogOpen(open);
-        if (!open) resetImageForm();
-      }}>
+      <Dialog 
+        open={isAddImageDialogOpen} 
+        onOpenChange={(open) => {
+          if (!open) {
+            resetImageForm();
+          }
+          setIsAddImageDialogOpen(open);
+        }}
+      >
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Image to Dataset</DialogTitle>
@@ -284,7 +295,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
                 Upload Image
               </label>
               <ImageUpload
-                onImageSelected={setUploadedImage}
+                onImageSelected={(data) => setUploadedImage(data)}
                 onReset={() => setUploadedImage(null)}
                 showPreview={!!uploadedImage}
                 previewImage={uploadedImage}
