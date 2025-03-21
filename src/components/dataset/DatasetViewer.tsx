@@ -36,6 +36,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
   const [newImageLabel, setNewImageLabel] = useState('');
   const [newImageCondition, setNewImageCondition] = useState('');
   const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | ''>('');
+  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
   
   useEffect(() => {
     setEditedName(dataset.name);
@@ -94,10 +95,16 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     setNewImageLabel('');
     setNewImageCondition('');
     setNewImageSeverity('');
+    setSelectedFile(undefined);
   };
   
   const handleOpenAddImageDialog = () => {
     resetImageForm();
+    setIsAddImageDialogOpen(true);
+  };
+
+  const handleFileSelected = (file: File) => {
+    setSelectedFile(file);
     setIsAddImageDialogOpen(true);
   };
   
@@ -133,7 +140,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
           
           <TabsContent value="grid" className="flex-1 p-6 pt-4">
             {dataset.images.length === 0 ? (
-              <EmptyDatasetView onAddImage={handleOpenAddImageDialog} />
+              <EmptyDatasetView 
+                onAddImage={handleOpenAddImageDialog} 
+                onFileSelected={handleFileSelected}
+              />
             ) : (
               <DatasetImageGrid 
                 images={dataset.images}
@@ -145,7 +155,10 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
           
           <TabsContent value="details" className="flex-1 p-6 pt-4">
             {dataset.images.length === 0 ? (
-              <EmptyDatasetView onAddImage={handleOpenAddImageDialog} />
+              <EmptyDatasetView 
+                onAddImage={handleOpenAddImageDialog}
+                onFileSelected={handleFileSelected}
+              />
             ) : (
               <DatasetDetailsTable 
                 images={dataset.images}
@@ -183,6 +196,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
           setIsAddImageDialogOpen(false);
           resetImageForm();
         }}
+        initialFile={selectedFile}
       />
       
       <ImageDetailsDialog

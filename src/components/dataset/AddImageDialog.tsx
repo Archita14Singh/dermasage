@@ -26,6 +26,7 @@ interface AddImageDialogProps {
   setSeverity: (severity: 'low' | 'moderate' | 'high' | '') => void;
   onSave: () => void;
   onCancel: () => void;
+  initialFile?: File;
 }
 
 const AddImageDialog: React.FC<AddImageDialogProps> = ({
@@ -40,7 +41,8 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
   severity,
   setSeverity,
   onSave,
-  onCancel
+  onCancel,
+  initialFile
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,7 +51,12 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
-  }, [open]);
+
+    // Process initial file if provided
+    if (initialFile && open) {
+      handleFile(initialFile);
+    }
+  }, [open, initialFile]);
 
   const handleImageSelection = (data: string) => {
     if (!data) {
@@ -57,6 +64,28 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
       return;
     }
     setUploadedImage(data);
+  };
+  
+  const handleFile = (file: File) => {
+    // Check if file is an image
+    if (!file.type.match('image.*')) {
+      toast.error('Please upload an image file.');
+      return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setUploadedImage(e.target.result.toString());
+      }
+    };
+    
+    reader.onerror = () => {
+      toast.error('Error reading file. Please try again.');
+    };
+    
+    reader.readAsDataURL(file);
   };
   
   return (

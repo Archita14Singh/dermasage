@@ -79,6 +79,15 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     reader.readAsDataURL(file);
   };
   
+  const handleSelectImage = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+      fileInputRef.current.click();
+    }
+  };
+  
   const handleCapture = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
@@ -135,14 +144,7 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
           </p>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                if (fileInputRef.current) {
-                  fileInputRef.current.value = '';
-                  fileInputRef.current.click();
-                }
-              }}
+              onClick={handleSelectImage}
               className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
             >
               <Upload className="w-4 h-4 mr-2" />

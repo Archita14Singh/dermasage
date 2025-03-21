@@ -2,12 +2,33 @@
 import React, { useRef } from 'react';
 import { InfoIcon, Upload, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
 interface EmptyDatasetViewProps {
   onAddImage: () => void;
+  onFileSelected: (file: File) => void;
 }
 
-const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({ onAddImage }) => {
+const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({ 
+  onAddImage,
+  onFileSelected 
+}) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onFileSelected(e.target.files[0]);
+    }
+  };
+
+  const handleUploadClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div className="h-full flex flex-col items-center justify-center text-center">
       <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
@@ -19,7 +40,7 @@ const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({ onAddImage }) => {
       </p>
       <div className="flex flex-col sm:flex-row gap-3">
         <Button 
-          onClick={onAddImage}
+          onClick={handleUploadClick}
           className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
         >
           <Upload className="w-4 h-4 mr-2" />
@@ -30,6 +51,13 @@ const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({ onAddImage }) => {
           Take Photo
         </Button>
       </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFileInput}
+      />
     </div>
   );
 };
