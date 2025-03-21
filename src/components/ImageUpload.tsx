@@ -12,6 +12,7 @@ interface ImageUploadProps {
   previewImage?: string | null;
   dragActive?: boolean;
   className?: string;
+  fileInputRef?: React.RefObject<HTMLInputElement>;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({
@@ -21,9 +22,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   previewImage = null,
   dragActive: externalDragActive,
   className,
+  fileInputRef: externalFileInputRef,
 }) => {
   const [dragActive, setDragActive] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const internalFileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = externalFileInputRef || internalFileInputRef;
   
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
@@ -66,10 +69,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
     reader.onload = (e) => {
       if (e.target?.result) {
         onImageSelected(e.target.result.toString());
-        // Clear input to allow selecting the same file again
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
       }
     };
     
@@ -82,7 +81,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({
   
   const handleCapture = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.value = '';
       fileInputRef.current.click();
     }
   };

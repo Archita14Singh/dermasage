@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ImageUpload from '../ImageUpload';
+import { toast } from 'sonner';
 
 interface AddImageDialogProps {
   open: boolean;
@@ -41,6 +42,23 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
   onSave,
   onCancel
 }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    // Reset file input when dialog opens/closes
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  }, [open]);
+
+  const handleImageSelection = (data: string) => {
+    if (!data) {
+      toast.error("Failed to load image. Please try again.");
+      return;
+    }
+    setUploadedImage(data);
+  };
+  
   return (
     <Dialog 
       open={open} 
@@ -61,10 +79,11 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
               Upload Image
             </label>
             <ImageUpload
-              onImageSelected={(data) => setUploadedImage(data)}
+              onImageSelected={handleImageSelection}
               onReset={() => setUploadedImage(null)}
               showPreview={!!uploadedImage}
               previewImage={uploadedImage}
+              fileInputRef={fileInputRef}
             />
           </div>
           

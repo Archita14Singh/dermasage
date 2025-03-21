@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { InfoIcon, Plus } from 'lucide-react';
+import { InfoIcon, Upload, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 interface EmptyDatasetViewProps {
@@ -17,10 +17,19 @@ const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({ onAddImage }) => {
       <p className="text-muted-foreground mb-6 max-w-md">
         This dataset doesn't have any images. Add some images to start building your dataset.
       </p>
-      <Button onClick={onAddImage}>
-        <Plus className="w-4 h-4 mr-2" />
-        Add First Image
-      </Button>
+      <div className="flex flex-col sm:flex-row gap-3">
+        <Button 
+          onClick={onAddImage}
+          className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Select Image
+        </Button>
+        <Button onClick={onAddImage}>
+          <Camera className="w-4 h-4 mr-2" />
+          Take Photo
+        </Button>
+      </div>
     </div>
   );
 };
