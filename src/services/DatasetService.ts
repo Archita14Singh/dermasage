@@ -75,30 +75,42 @@ class DatasetService {
       return null;
     }
     
-    const datasets = this.getDatasets();
-    const datasetIndex = datasets.findIndex(d => d.id === datasetId);
-    
-    if (datasetIndex === -1) {
-      toast.error('Dataset not found');
+    // Check if the image data is valid
+    if (!imageData.startsWith('data:image/')) {
+      toast.error('Invalid image format');
       return null;
     }
     
-    const newImage: DatasetImage = {
-      id: crypto.randomUUID(),
-      imageUrl: imageData,
-      label: label.trim(),
-      condition: condition?.trim(),
-      severity,
-      dateAdded: new Date()
-    };
-    
-    datasets[datasetIndex].images.push(newImage);
-    datasets[datasetIndex].updatedAt = new Date();
-    
-    this.saveDatasets(datasets);
-    toast.success('Image added to dataset');
-    
-    return newImage;
+    try {
+      const datasets = this.getDatasets();
+      const datasetIndex = datasets.findIndex(d => d.id === datasetId);
+      
+      if (datasetIndex === -1) {
+        toast.error('Dataset not found');
+        return null;
+      }
+      
+      const newImage: DatasetImage = {
+        id: crypto.randomUUID(),
+        imageUrl: imageData,
+        label: label.trim(),
+        condition: condition?.trim(),
+        severity,
+        dateAdded: new Date()
+      };
+      
+      datasets[datasetIndex].images.push(newImage);
+      datasets[datasetIndex].updatedAt = new Date();
+      
+      this.saveDatasets(datasets);
+      toast.success('Image added to dataset');
+      
+      return newImage;
+    } catch (error) {
+      console.error('Error adding image to dataset:', error);
+      toast.error('Failed to add image to dataset');
+      return null;
+    }
   }
   
   // Remove an image from a dataset

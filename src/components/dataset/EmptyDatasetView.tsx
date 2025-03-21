@@ -3,6 +3,7 @@ import React, { useRef } from 'react';
 import { InfoIcon, Upload, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toast } from 'sonner';
 
 interface EmptyDatasetViewProps {
   onAddImage: () => void;
@@ -21,12 +22,14 @@ const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({
     }
   };
 
-  const handleUploadClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleUploadClick = () => {
     if (fileInputRef.current) {
       fileInputRef.current.click();
     }
+  };
+
+  const handleCamera = () => {
+    onAddImage();
   };
 
   return (
@@ -46,7 +49,7 @@ const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({
           <Upload className="w-4 h-4 mr-2" />
           Select Image
         </Button>
-        <Button onClick={onAddImage}>
+        <Button onClick={handleCamera}>
           <Camera className="w-4 h-4 mr-2" />
           Take Photo
         </Button>
