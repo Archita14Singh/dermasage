@@ -1,43 +1,32 @@
 
-import { Dataset, DatasetImage } from '@/types/dataset';
+import { Dataset } from '@/types/dataset';
 import { toast } from 'sonner';
+import { BaseService } from './BaseService';
+import { DatasetImageService } from './DatasetImageService';
 
-// For demo purposes, we'll use localStorage to persist datasets
-// In a real application, this would connect to a backend API
-class DatasetService {
+/**
+ * Service for managing datasets
+ */
+class DatasetService extends BaseService<Dataset> {
   private static STORAGE_KEY = 'skinwise_datasets';
+  private imageService: DatasetImageService;
   
-  // Get all datasets
-  static getDatasets(): Dataset[] {
-    try {
-      const datasetsJson = localStorage.getItem(this.STORAGE_KEY);
-      if (!datasetsJson) return [];
-      return JSON.parse(datasetsJson, (key, value) => {
-        // Convert date strings back to Date objects
-        if (key === 'createdAt' || key === 'updatedAt' || key === 'dateAdded') {
-          return new Date(value);
-        }
-        return value;
-      });
-    } catch (error) {
-      console.error('Error loading datasets:', error);
-      toast.error('Failed to load datasets');
-      return [];
-    }
+  constructor() {
+    super(DatasetService.STORAGE_KEY);
+    this.imageService = new DatasetImageService();
   }
   
-  // Save all datasets
-  private static saveDatasets(datasets: Dataset[]): void {
-    try {
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(datasets));
-    } catch (error) {
-      console.error('Error saving datasets:', error);
-      toast.error('Failed to save datasets');
-    }
+  /**
+   * Get all datasets
+   */
+  getDatasets(): Dataset[] {
+    return this.getAllItems();
   }
   
-  // Create a new dataset
-  static createDataset(name: string, description: string): Dataset {
+  /**
+   * Create a new dataset
+   */
+  createDataset(name: string, description: string): Dataset {
     if (!name.trim()) {
       throw new Error('Dataset name is required');
     }
@@ -54,99 +43,26 @@ class DatasetService {
     };
     
     datasets.push(newDataset);
-    this.saveDatasets(datasets);
+    this.saveAllItems(datasets);
     toast.success(`Dataset "${name}" created successfully`);
     
     return newDataset;
   }
   
-  // Get a dataset by ID
-  static getDataset(id: string): Dataset | undefined {
+  /**
+   * Get a dataset by ID
+   */
+  getDataset(id: string): Dataset | undefined {
     if (!id) return undefined;
     
     const datasets = this.getDatasets();
     return datasets.find(dataset => dataset.id === id);
   }
   
-  // Add an image to a dataset
-  static addImageToDataset(datasetId: string, imageData: string, label: string, condition?: string, severity?: 'low' | 'moderate' | 'high'): DatasetImage | null {
-    if (!datasetId || !imageData || !label.trim()) {
-      toast.error('Missing required data for adding image');
-      return null;
-    }
-    
-    // Check if the image data is valid
-    if (!imageData.startsWith('data:image/')) {
-      toast.error('Invalid image format');
-      return null;
-    }
-    
-    try {
-      const datasets = this.getDatasets();
-      const datasetIndex = datasets.findIndex(d => d.id === datasetId);
-      
-      if (datasetIndex === -1) {
-        toast.error('Dataset not found');
-        return null;
-      }
-      
-      const newImage: DatasetImage = {
-        id: crypto.randomUUID(),
-        imageUrl: imageData,
-        label: label.trim(),
-        condition: condition?.trim(),
-        severity,
-        dateAdded: new Date()
-      };
-      
-      datasets[datasetIndex].images.push(newImage);
-      datasets[datasetIndex].updatedAt = new Date();
-      
-      this.saveDatasets(datasets);
-      toast.success('Image added to dataset');
-      
-      return newImage;
-    } catch (error) {
-      console.error('Error adding image to dataset:', error);
-      toast.error('Failed to add image to dataset');
-      return null;
-    }
-  }
-  
-  // Remove an image from a dataset
-  static removeImageFromDataset(datasetId: string, imageId: string): boolean {
-    if (!datasetId || !imageId) {
-      toast.error('Missing dataset or image ID');
-      return false;
-    }
-    
-    const datasets = this.getDatasets();
-    const datasetIndex = datasets.findIndex(d => d.id === datasetId);
-    
-    if (datasetIndex === -1) {
-      toast.error('Dataset not found');
-      return false;
-    }
-    
-    const dataset = datasets[datasetIndex];
-    const initialImageCount = dataset.images.length;
-    
-    dataset.images = dataset.images.filter(img => img.id !== imageId);
-    
-    if (dataset.images.length === initialImageCount) {
-      toast.error('Image not found in dataset');
-      return false;
-    }
-    
-    dataset.updatedAt = new Date();
-    this.saveDatasets(datasets);
-    toast.success('Image removed from dataset');
-    
-    return true;
-  }
-  
-  // Delete a dataset
-  static deleteDataset(id: string): boolean {
+  /**
+   * Delete a dataset
+   */
+  deleteDataset(id: string): boolean {
     if (!id) {
       toast.error('Missing dataset ID');
       return false;
@@ -162,14 +78,16 @@ class DatasetService {
       return false;
     }
     
-    this.saveDatasets(filteredDatasets);
+    this.saveAllItems(filteredDatasets);
     toast.success('Dataset deleted');
     
     return true;
   }
   
-  // Update dataset details
-  static updateDataset(id: string, updates: { name?: string; description?: string }): Dataset | null {
+  /**
+   * Update dataset details
+   */
+  updateDataset(id: string, updates: { name?: string; description?: string }): Dataset | null {
     if (!id) {
       toast.error('Missing dataset ID');
       return null;
@@ -192,11 +110,34 @@ class DatasetService {
     }
     
     datasets[datasetIndex].updatedAt = new Date();
-    this.saveDatasets(datasets);
+    this.saveAllItems(datasets);
     toast.success('Dataset updated');
     
     return datasets[datasetIndex];
   }
+  
+  // Image-related methods that forward to the image service
+  
+  /**
+   * Add an image to a dataset
+   */
+  addImageToDataset(
+    datasetId: string, 
+    imageData: string, 
+    label: string, 
+    condition?: string, 
+    severity?: 'low' | 'moderate' | 'high'
+  ) {
+    return this.imageService.addImageToDataset(datasetId, imageData, label, condition, severity);
+  }
+  
+  /**
+   * Remove an image from a dataset
+   */
+  removeImageFromDataset(datasetId: string, imageId: string) {
+    return this.imageService.removeImageFromDataset(datasetId, imageId);
+  }
 }
 
-export default DatasetService;
+// Create and export a singleton instance
+export default new DatasetService();
