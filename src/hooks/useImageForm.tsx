@@ -9,14 +9,48 @@ export const useImageForm = (datasetId: string, onSuccess: () => void) => {
   const [newImageLabel, setNewImageLabel] = useState('');
   const [newImageCondition, setNewImageCondition] = useState('');
   const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | ''>('');
-  const [selectedFile, setSelectedFile] = useState<File | undefined>(undefined);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   const resetForm = () => {
     setUploadedImage(null);
     setNewImageLabel('');
     setNewImageCondition('');
     setNewImageSeverity('');
-    setSelectedFile(undefined);
+    setSelectedFile(null);
+  };
+
+  const handleFileUpload = (file: File) => {
+    setIsLoading(true);
+    
+    if (!file) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Check if file is an image
+    if (!file.type.match('image.*')) {
+      toast.error('Please upload an image file');
+      setIsLoading(false);
+      return;
+    }
+    
+    const reader = new FileReader();
+    
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setUploadedImage(e.target.result.toString());
+        setSelectedFile(file);
+      }
+      setIsLoading(false);
+    };
+    
+    reader.onerror = () => {
+      toast.error('Error reading file. Please try again.');
+      setIsLoading(false);
+    };
+    
+    reader.readAsDataURL(file);
   };
   
   const handleAddImage = () => {
@@ -26,7 +60,7 @@ export const useImageForm = (datasetId: string, onSuccess: () => void) => {
     }
     
     try {
-      DatasetService.addImageToDataset(
+      const result = DatasetService.addImageToDataset(
         datasetId,
         uploadedImage,
         newImageLabel.trim(),
@@ -34,9 +68,11 @@ export const useImageForm = (datasetId: string, onSuccess: () => void) => {
         newImageSeverity as 'low' | 'moderate' | 'high' | undefined
       );
       
-      toast.success('Image added successfully');
-      resetForm();
-      onSuccess();
+      if (result) {
+        toast.success('Image added successfully');
+        resetForm();
+        onSuccess();
+      }
     } catch (error) {
       console.error('Error adding image:', error);
       toast.error('Failed to add image to dataset');
@@ -54,6 +90,8 @@ export const useImageForm = (datasetId: string, onSuccess: () => void) => {
     setNewImageSeverity,
     selectedFile,
     setSelectedFile,
+    isLoading,
+    handleFileUpload,
     resetForm,
     handleAddImage
   };

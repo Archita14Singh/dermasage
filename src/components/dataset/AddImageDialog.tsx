@@ -1,5 +1,5 @@
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -10,9 +10,9 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import ImageUpload from '../ImageUpload';
 import { toast } from 'sonner';
-import { Camera, Upload } from 'lucide-react';
+import { Camera, Upload, X } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 interface AddImageDialogProps {
   open: boolean;
@@ -27,7 +27,9 @@ interface AddImageDialogProps {
   setSeverity: (severity: 'low' | 'moderate' | 'high' | '') => void;
   onSave: () => void;
   onCancel: () => void;
-  initialFile?: File;
+  initialFile?: File | null;
+  isLoading?: boolean;
+  handleFileUpload?: (file: File) => void;
 }
 
 const AddImageDialog: React.FC<AddImageDialogProps> = ({
@@ -43,61 +45,34 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
   setSeverity,
   onSave,
   onCancel,
-  initialFile
+  initialFile,
+  isLoading = false,
+  handleFileUpload
 }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [fileProcessing, setFileProcessing] = useState(false);
 
   useEffect(() => {
     // Process initial file if provided
-    if (initialFile && open) {
-      handleFile(initialFile);
+    if (initialFile && open && handleFileUpload) {
+      handleFileUpload(initialFile);
     }
-  }, [open, initialFile]);
-
-  const handleImageSelection = (data: string) => {
-    if (!data) {
-      toast.error("Failed to load image. Please try again.");
-      return;
-    }
-    setUploadedImage(data);
-  };
-  
-  const handleFile = (file: File) => {
-    setFileProcessing(true);
-    
-    // Check if file is an image
-    if (!file.type.match('image.*')) {
-      toast.error('Please upload an image file.');
-      setFileProcessing(false);
-      return;
-    }
-    
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setUploadedImage(e.target.result.toString());
-      }
-      setFileProcessing(false);
-    };
-    
-    reader.onerror = () => {
-      toast.error('Error reading file. Please try again.');
-      setFileProcessing(false);
-    };
-    
-    reader.readAsDataURL(file);
-  };
+  }, [open, initialFile, handleFileUpload]);
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      handleFile(e.target.files[0]);
+    if (e.target.files && e.target.files[0] && handleFileUpload) {
+      handleFileUpload(e.target.files[0]);
     }
   };
 
   const handleUploadClick = () => {
     if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleTakePhoto = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.capture = 'environment';
       fileInputRef.current.click();
     }
   };
@@ -121,7 +96,12 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
             <label className="text-sm font-medium">
               Upload Image
             </label>
-            {uploadedImage ? (
+            {isLoading ? (
+              <div className="flex items-center justify-center p-8 border-2 border-dashed rounded-xl bg-white/50">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-2">Processing image...</span>
+              </div>
+            ) : uploadedImage ? (
               <div className="relative rounded-lg overflow-hidden bg-white">
                 <img
                   src={uploadedImage}
@@ -134,7 +114,7 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
                   className="absolute top-2 right-2 rounded-full bg-white/80 shadow-sm hover:bg-white"
                   onClick={() => setUploadedImage(null)}
                 >
-                  X
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
             ) : (
@@ -146,23 +126,28 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
                 <p className="text-muted-foreground mb-6 max-w-md">
                   Select or take a photo to add to your dataset
                 </p>
-                <Button 
-                  onClick={handleUploadClick}
-                  className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
-                  disabled={fileProcessing}
-                >
-                  <Upload className="w-4 h-4 mr-2" />
-                  Select Image
-                </Button>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleFileInput}
-                />
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button 
+                    onClick={handleUploadClick}
+                    className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Select Image
+                  </Button>
+                  <Button onClick={handleTakePhoto}>
+                    <Camera className="w-4 h-4 mr-2" />
+                    Take Photo
+                  </Button>
+                </div>
               </div>
             )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileInput}
+            />
           </div>
           
           <div className="space-y-2">
@@ -217,7 +202,7 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
           </Button>
           <Button 
             onClick={onSave} 
-            disabled={!uploadedImage || !label.trim() || fileProcessing}
+            disabled={!uploadedImage || !label.trim() || isLoading}
           >
             Add to Dataset
           </Button>

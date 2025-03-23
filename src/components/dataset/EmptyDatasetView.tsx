@@ -2,7 +2,6 @@
 import React, { useRef } from 'react';
 import { InfoIcon, Upload, Camera } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 
 interface EmptyDatasetViewProps {
@@ -28,8 +27,12 @@ const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({
     }
   };
 
-  const handleCamera = () => {
-    onAddImage();
+  const handleCameraClick = () => {
+    // For mobile devices, make sure to use the camera
+    if (fileInputRef.current) {
+      fileInputRef.current.capture = 'environment';
+      fileInputRef.current.click();
+    }
   };
 
   return (
@@ -49,7 +52,7 @@ const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({
           <Upload className="w-4 h-4 mr-2" />
           Select Image
         </Button>
-        <Button onClick={handleCamera}>
+        <Button onClick={handleCameraClick}>
           <Camera className="w-4 h-4 mr-2" />
           Take Photo
         </Button>

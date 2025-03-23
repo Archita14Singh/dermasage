@@ -40,6 +40,8 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     setNewImageSeverity,
     selectedFile,
     setSelectedFile,
+    isLoading,
+    handleFileUpload,
     resetForm,
     handleAddImage
   } = useImageForm(dataset.id, onDatasetUpdated);
@@ -125,6 +127,8 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
           resetForm();
         }}
         initialFile={selectedFile}
+        isLoading={isLoading}
+        handleFileUpload={handleFileUpload}
       />
       
       <ImageDetailsDialog
