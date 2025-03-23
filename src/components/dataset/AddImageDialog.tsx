@@ -8,7 +8,7 @@ import {
   DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import ImageUploadSection from './ImageUploadSection';
+import ImageUploader from '@/components/ImageUploader';
 import ImageMetadataForm from './ImageMetadataForm';
 
 interface AddImageDialogProps {
@@ -53,6 +53,14 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
     }
   }, [open, initialFile, handleFileUpload]);
   
+  const handleImageSelected = (imageData: string, file: File) => {
+    if (handleFileUpload) {
+      handleFileUpload(file);
+    } else {
+      setUploadedImage(imageData);
+    }
+  };
+  
   return (
     <Dialog 
       open={open} 
@@ -68,14 +76,13 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
           <DialogTitle>Add Image to Dataset</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
-          {handleFileUpload && (
-            <ImageUploadSection
-              uploadedImage={uploadedImage}
-              setUploadedImage={setUploadedImage}
-              isLoading={isLoading}
-              handleFileUpload={handleFileUpload}
-            />
-          )}
+          <ImageUploader
+            onImageSelected={handleImageSelected}
+            showPreview={!!uploadedImage}
+            previewImage={uploadedImage}
+            isLoading={isLoading}
+            onReset={() => setUploadedImage(null)}
+          />
           
           <ImageMetadataForm
             label={label}

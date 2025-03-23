@@ -1,8 +1,7 @@
 
-import React, { useRef } from 'react';
-import { InfoIcon, Upload, Camera } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
+import React from 'react';
+import { InfoIcon } from 'lucide-react';
+import ImageUploader from '@/components/ImageUploader';
 
 interface EmptyDatasetViewProps {
   onAddImage: () => void;
@@ -13,26 +12,8 @@ const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({
   onAddImage,
   onFileSelected 
 }) => {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      onFileSelected(e.target.files[0]);
-    }
-  };
-
-  const handleUploadClick = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.click();
-    }
-  };
-
-  const handleCameraClick = () => {
-    // For mobile devices, make sure to use the camera
-    if (fileInputRef.current) {
-      fileInputRef.current.capture = 'environment';
-      fileInputRef.current.click();
-    }
+  const handleImageSelected = (imageData: string, file: File) => {
+    onFileSelected(file);
   };
 
   return (
@@ -44,26 +25,12 @@ const EmptyDatasetView: React.FC<EmptyDatasetViewProps> = ({
       <p className="text-muted-foreground mb-6 max-w-md">
         This dataset doesn't have any images. Add some images to start building your dataset.
       </p>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Button 
-          onClick={handleUploadClick}
-          className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Select Image
-        </Button>
-        <Button onClick={handleCameraClick}>
-          <Camera className="w-4 h-4 mr-2" />
-          Take Photo
-        </Button>
+      <div className="w-full max-w-md">
+        <ImageUploader
+          onImageSelected={handleImageSelected}
+          className="p-6"
+        />
       </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileInput}
-      />
     </div>
   );
 };

@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { loadSkinAnalysisModel } from '@/utils/modelLoader';
 import { analyzeSkinCondition } from '@/utils/skinAnalysisUtils';
 import AnalysisResult from './AnalysisResult';
-import ImageUpload from './ImageUpload';
+import ImageUploader from './ImageUploader';
 import LoadingOverlay from './LoadingOverlay';
 import { useNavigate } from 'react-router-dom';
 
@@ -62,8 +62,8 @@ const SkinAnalysis: React.FC = () => {
   const renderContent = () => {
     if (status === 'idle') {
       return (
-        <ImageUpload 
-          onImageSelected={handleImageSelected}
+        <ImageUploader 
+          onImageSelected={(imageData) => handleImageSelected(imageData)}
           className="h-[400px]"
         />
       );

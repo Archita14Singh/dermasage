@@ -53,6 +53,13 @@ export const useImageForm = (datasetId: string, onSuccess: () => void) => {
     reader.readAsDataURL(file);
   };
   
+  const handleImageSelected = (imageData: string, file: File) => {
+    setIsLoading(true);
+    setSelectedFile(file);
+    setUploadedImage(imageData);
+    setIsLoading(false);
+  };
+  
   const handleAddImage = () => {
     if (!uploadedImage || !newImageLabel.trim()) {
       toast.error('Please upload an image and provide a label');
@@ -92,6 +99,7 @@ export const useImageForm = (datasetId: string, onSuccess: () => void) => {
     setSelectedFile,
     isLoading,
     handleFileUpload,
+    handleImageSelected,
     resetForm,
     handleAddImage
   };
