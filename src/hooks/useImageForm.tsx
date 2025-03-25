@@ -58,6 +58,7 @@ export const useImageForm = (options: ImageFormOptions = {}) => {
     
     reader.onload = (e) => {
       if (e.target?.result) {
+        console.log("File loaded successfully");
         setUploadedImage(e.target.result.toString());
         setSelectedFile(file);
       }
@@ -65,6 +66,7 @@ export const useImageForm = (options: ImageFormOptions = {}) => {
     };
     
     reader.onerror = () => {
+      console.error("File reading error");
       toast.error('Error reading file. Please try again.');
       setIsLoading(false);
     };
@@ -74,9 +76,16 @@ export const useImageForm = (options: ImageFormOptions = {}) => {
   
   const handleImageSelected = (imageData: string, file: File) => {
     setIsLoading(true);
-    setSelectedFile(file);
-    setUploadedImage(imageData);
-    setIsLoading(false);
+    try {
+      console.log("Image selected", { fileSize: file.size, fileName: file.name });
+      setSelectedFile(file);
+      setUploadedImage(imageData);
+    } catch (error) {
+      console.error("Error in handleImageSelected", error);
+      toast.error('Error processing image');
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const handleAddImage = async () => {

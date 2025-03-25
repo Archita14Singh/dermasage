@@ -37,6 +37,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       condition?: string,
       severity?: 'low' | 'moderate' | 'high'
     ) => {
+      console.log("Saving image to dataset", { datasetId: dataset.id, label });
       return DatasetService.addImageToDataset(
         dataset.id,
         imageData,
@@ -92,11 +93,13 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
   };
   
   const handleOpenAddImageDialog = () => {
+    console.log("Opening add image dialog");
     resetForm();
     setIsAddImageDialogOpen(true);
   };
 
   const handleFileSelected = (file: File) => {
+    console.log("File selected in DatasetViewer", file.name);
     setSelectedFile(file);
     setIsAddImageDialogOpen(true);
   };
@@ -141,6 +144,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         setSeverity={setNewImageSeverity}
         onSave={handleAddImage}
         onCancel={() => {
+          console.log("Cancelling add image dialog");
           setIsAddImageDialogOpen(false);
           resetForm();
         }}

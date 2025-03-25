@@ -49,11 +49,13 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
   useEffect(() => {
     // Process initial file if provided
     if (initialFile && open && handleFileUpload) {
+      console.log("Processing initial file in AddImageDialog");
       handleFileUpload(initialFile);
     }
   }, [open, initialFile, handleFileUpload]);
   
   const handleImageSelected = (imageData: string, file: File) => {
+    console.log("Image selected in AddImageDialog");
     if (handleFileUpload) {
       handleFileUpload(file);
     } else {

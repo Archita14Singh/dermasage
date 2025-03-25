@@ -67,15 +67,19 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
       return;
     }
     
+    console.log("Processing file in ImageUploader", file.name);
+    
     const reader = new FileReader();
     
     reader.onload = (e) => {
       if (e.target?.result) {
+        console.log("File read successful in ImageUploader");
         onImageSelected(e.target.result.toString(), file);
       }
     };
     
     reader.onerror = () => {
+      console.error("Error reading file in ImageUploader");
       toast.error('Error reading file. Please try again.');
     };
     

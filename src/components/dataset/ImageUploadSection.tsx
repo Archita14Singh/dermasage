@@ -20,6 +20,7 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
 
   const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
+      console.log("File selected in ImageUploadSection");
       handleFileUpload(e.target.files[0]);
     }
   };
