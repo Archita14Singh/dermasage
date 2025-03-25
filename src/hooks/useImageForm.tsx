@@ -6,7 +6,7 @@ export interface ImageFormOptions {
   onSuccess?: () => void;
   initialLabel?: string;
   initialCondition?: string;
-  initialSeverity?: 'low' | 'moderate' | 'high' | '';
+  initialSeverity?: 'low' | 'moderate' | 'high' | '' | 'none';
   saveFunction?: (
     imageData: string,
     label: string,
@@ -27,7 +27,7 @@ export const useImageForm = (options: ImageFormOptions = {}) => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [newImageLabel, setNewImageLabel] = useState(initialLabel);
   const [newImageCondition, setNewImageCondition] = useState(initialCondition);
-  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | ''>(initialSeverity);
+  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | '' | 'none'>(initialSeverity);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -98,7 +98,7 @@ export const useImageForm = (options: ImageFormOptions = {}) => {
       if (saveFunction) {
         // Convert "none" severity to undefined when saving
         const severityValue = newImageSeverity === 'none' ? undefined : 
-                             (newImageSeverity || undefined);
+                             (newImageSeverity === '' ? undefined : newImageSeverity);
         
         const result = await saveFunction(
           uploadedImage,

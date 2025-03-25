@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card
@@ -39,7 +38,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     ) => {
       console.log("Saving image to dataset", { datasetId: dataset.id, label });
       // If severity is 'none', pass undefined to the service
-      const severityToSave = severity === 'none' ? undefined : severity;
+      const severityToSave = severity;
       
       return DatasetService.addImageToDataset(
         dataset.id,

@@ -20,8 +20,8 @@ interface AddImageDialogProps {
   setLabel: (label: string) => void;
   condition: string;
   setCondition: (condition: string) => void;
-  severity: 'low' | 'moderate' | 'high' | '';
-  setSeverity: (severity: 'low' | 'moderate' | 'high' | '') => void;
+  severity: 'low' | 'moderate' | 'high' | '' | 'none';
+  setSeverity: (severity: 'low' | 'moderate' | 'high' | '' | 'none') => void;
   onSave: () => void;
   onCancel: () => void;
   initialFile?: File | null;

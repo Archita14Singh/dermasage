@@ -8,8 +8,8 @@ interface ImageMetadataFormProps {
   setLabel: (label: string) => void;
   condition: string;
   setCondition: (condition: string) => void;
-  severity: 'low' | 'moderate' | 'high' | '';
-  setSeverity: (severity: 'low' | 'moderate' | 'high' | '') => void;
+  severity: 'low' | 'moderate' | 'high' | '' | 'none';
+  setSeverity: (severity: 'low' | 'moderate' | 'high' | '' | 'none') => void;
 }
 
 const ImageMetadataForm: React.FC<ImageMetadataFormProps> = ({
@@ -53,7 +53,7 @@ const ImageMetadataForm: React.FC<ImageMetadataFormProps> = ({
           </label>
           <Select
             value={severity}
-            onValueChange={(value) => setSeverity(value as 'low' | 'moderate' | 'high' | '')}
+            onValueChange={(value) => setSeverity(value as 'low' | 'moderate' | 'high' | '' | 'none')}
           >
             <SelectTrigger id="image-severity">
               <SelectValue placeholder="Select severity" />
