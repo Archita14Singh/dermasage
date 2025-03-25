@@ -38,12 +38,15 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       severity?: 'low' | 'moderate' | 'high'
     ) => {
       console.log("Saving image to dataset", { datasetId: dataset.id, label });
+      // If severity is 'none', pass undefined to the service
+      const severityToSave = severity === 'none' ? undefined : severity;
+      
       return DatasetService.addImageToDataset(
         dataset.id,
         imageData,
         label,
         condition,
-        severity
+        severityToSave
       );
     }
   };

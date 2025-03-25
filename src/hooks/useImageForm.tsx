@@ -96,11 +96,15 @@ export const useImageForm = (options: ImageFormOptions = {}) => {
     
     try {
       if (saveFunction) {
+        // Convert "none" severity to undefined when saving
+        const severityValue = newImageSeverity === 'none' ? undefined : 
+                             (newImageSeverity || undefined);
+        
         const result = await saveFunction(
           uploadedImage,
           newImageLabel.trim(),
           newImageCondition.trim() || undefined,
-          newImageSeverity || undefined
+          severityValue
         );
         
         if (result) {
