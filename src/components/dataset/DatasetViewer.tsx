@@ -29,6 +29,24 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
   const [editedDescription, setEditedDescription] = useState(dataset.description);
   const [selectedImage, setSelectedImage] = useState<DatasetImage | null>(null);
   
+  const imageFormOptions = {
+    onSuccess: onDatasetUpdated,
+    saveFunction: (
+      imageData: string,
+      label: string,
+      condition?: string,
+      severity?: 'low' | 'moderate' | 'high'
+    ) => {
+      return DatasetService.addImageToDataset(
+        dataset.id,
+        imageData,
+        label,
+        condition,
+        severity
+      );
+    }
+  };
+  
   const {
     uploadedImage,
     setUploadedImage,
@@ -44,7 +62,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     handleFileUpload,
     resetForm,
     handleAddImage
-  } = useImageForm(dataset.id, onDatasetUpdated);
+  } = useImageForm(imageFormOptions);
   
   useEffect(() => {
     setEditedName(dataset.name);

@@ -1,22 +1,41 @@
 
 import { useState } from 'react';
-import { DatasetImage } from '@/types/dataset';
 import { toast } from 'sonner';
-import DatasetService from '@/services/DatasetService';
 
-export const useImageForm = (datasetId: string, onSuccess: () => void) => {
+export interface ImageFormOptions {
+  onSuccess?: () => void;
+  initialLabel?: string;
+  initialCondition?: string;
+  initialSeverity?: 'low' | 'moderate' | 'high' | '';
+  saveFunction?: (
+    imageData: string,
+    label: string,
+    condition?: string,
+    severity?: 'low' | 'moderate' | 'high' | undefined
+  ) => any;
+}
+
+export const useImageForm = (options: ImageFormOptions = {}) => {
+  const {
+    onSuccess,
+    initialLabel = '',
+    initialCondition = '',
+    initialSeverity = '',
+    saveFunction
+  } = options;
+  
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [newImageLabel, setNewImageLabel] = useState('');
-  const [newImageCondition, setNewImageCondition] = useState('');
-  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | ''>('');
+  const [newImageLabel, setNewImageLabel] = useState(initialLabel);
+  const [newImageCondition, setNewImageCondition] = useState(initialCondition);
+  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | ''>(initialSeverity);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
   const resetForm = () => {
     setUploadedImage(null);
-    setNewImageLabel('');
-    setNewImageCondition('');
-    setNewImageSeverity('');
+    setNewImageLabel(initialLabel);
+    setNewImageCondition(initialCondition);
+    setNewImageSeverity(initialSeverity);
     setSelectedFile(null);
   };
 
@@ -60,29 +79,35 @@ export const useImageForm = (datasetId: string, onSuccess: () => void) => {
     setIsLoading(false);
   };
   
-  const handleAddImage = () => {
+  const handleAddImage = async () => {
     if (!uploadedImage || !newImageLabel.trim()) {
       toast.error('Please upload an image and provide a label');
       return;
     }
     
     try {
-      const result = DatasetService.addImageToDataset(
-        datasetId,
-        uploadedImage,
-        newImageLabel.trim(),
-        newImageCondition.trim() || undefined,
-        newImageSeverity as 'low' | 'moderate' | 'high' | undefined
-      );
-      
-      if (result) {
-        toast.success('Image added successfully');
+      if (saveFunction) {
+        const result = await saveFunction(
+          uploadedImage,
+          newImageLabel.trim(),
+          newImageCondition.trim() || undefined,
+          newImageSeverity || undefined
+        );
+        
+        if (result) {
+          toast.success('Image added successfully');
+          resetForm();
+          onSuccess?.();
+        }
+      } else {
+        console.warn('No save function provided to useImageForm');
+        toast.success('Image processed successfully');
         resetForm();
-        onSuccess();
+        onSuccess?.();
       }
     } catch (error) {
       console.error('Error adding image:', error);
-      toast.error('Failed to add image to dataset');
+      toast.error('Failed to process image');
     }
   };
   
