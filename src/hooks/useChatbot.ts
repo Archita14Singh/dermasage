@@ -143,6 +143,8 @@ export function useChatbot() {
     showQuestionnaire,
     clientProfile,
     handleSubmitQuestionnaire,
-    handleSendMessage
+    handleSendMessage,
+    setMessages,
+    setIsLoading
   };
 }

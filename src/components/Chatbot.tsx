@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useChatbot } from '@/hooks/useChatbot';
 import AnalysisResultsHandler from './chat/AnalysisResultsHandler';
 import ChatContainer from './chat/ChatContainer';
@@ -10,17 +10,16 @@ const Chatbot: React.FC = () => {
     isLoading, 
     showQuestionnaire, 
     handleSubmitQuestionnaire, 
-    handleSendMessage 
+    handleSendMessage,
+    setMessages,
+    setIsLoading
   } = useChatbot();
-  
-  const [loading, setLoading] = useState(isLoading);
-  const [messageList, setMessageList] = useState(messages);
   
   return (
     <>
       <AnalysisResultsHandler 
-        setMessages={setMessageList} 
-        setIsLoading={setLoading} 
+        setMessages={setMessages} 
+        setIsLoading={setIsLoading} 
       />
       
       <ChatContainer 
