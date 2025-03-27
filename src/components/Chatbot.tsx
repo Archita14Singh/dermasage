@@ -203,7 +203,7 @@ const Chatbot: React.FC = () => {
       
       <CardFooter className="p-4 pt-2 border-t">
         {showQuestionnaire ? (
-          <ClientQuestionnaire onSubmit={handleSubmitQuestionnaire} />
+          <ClientQuestionnaire onComplete={handleSubmitQuestionnaire} />
         ) : (
           <ChatInput
             onSendMessage={handleSendMessage}
