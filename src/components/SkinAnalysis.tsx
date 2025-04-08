@@ -19,24 +19,29 @@ const SkinAnalysis: React.FC = () => {
   const [analysisResults, setAnalysisResults] = useState<any>(null);
   const navigate = useNavigate();
   
-  const handleImageSelected = async (imageData: string) => {
+  const handleImageSelected = async (imageData: string, file: File) => {
     setImage(imageData);
     setStatus('loading');
     
     try {
-      setStatus('analyzing');
-      
       // First ensure the model is loaded
+      console.log('Loading skin analysis model...');
       await loadSkinAnalysisModel();
+      
+      setStatus('analyzing');
+      console.log('Model loaded, beginning analysis...');
       
       // Mock delay to simulate processing time for now
       await new Promise(resolve => setTimeout(resolve, 3000));
       
       // For the prototype, we'll use mock analysis results
+      console.log('Analyzing image...');
       const results = await analyzeSkinCondition(imageData);
       
+      console.log('Analysis complete:', results);
       setAnalysisResults(results);
       setStatus('complete');
+      toast.success('Skin analysis complete');
     } catch (error) {
       console.error('Error analyzing image:', error);
       setStatus('error');
@@ -53,6 +58,7 @@ const SkinAnalysis: React.FC = () => {
   const handleDiscussWithAI = () => {
     if (analysisResults && image) {
       // Store analysis results in sessionStorage to pass to chatbot
+      console.log('Storing analysis results for chatbot...');
       sessionStorage.setItem('skinAnalysisResults', JSON.stringify(analysisResults));
       sessionStorage.setItem('skinAnalysisImage', image);
       navigate('/chat');
@@ -63,7 +69,7 @@ const SkinAnalysis: React.FC = () => {
     if (status === 'idle') {
       return (
         <ImageUploader 
-          onImageSelected={(imageData) => handleImageSelected(imageData)}
+          onImageSelected={(imageData, file) => handleImageSelected(imageData, file)}
           className="h-[400px]"
         />
       );

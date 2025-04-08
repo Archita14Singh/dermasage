@@ -57,6 +57,7 @@ class ChatService {
 
   static async processImageMessage(imageData: string, clientProfile: ClientProfile = null): Promise<Message> {
     try {
+      console.log('Processing image message with ChatService...');
       // Get the analysis results
       const results = await SkinConditionService.analyzeImage(imageData);
       
@@ -85,17 +86,14 @@ class ChatService {
 
   static async processAnalysisResults(analysisResults: AnalysisResult, clientProfile: ClientProfile = null): Promise<Message> {
     try {
+      console.log('Processing analysis results with ChatService...', analysisResults);
       // Format the response based on the analysis and client profile
       const response = SkinConditionService.formatAnalysisForChat(analysisResults, clientProfile);
-      
-      // Add additional personalized message
-      const greeting = clientProfile ? `${clientProfile.name}, ` : '';
-      const personalizedResponse = `I see you've just completed a skin analysis! ${response}\n\nIs there anything specific about these results you'd like me to explain in more detail?`;
       
       // Return the formatted bot message
       return {
         id: Date.now().toString(),
-        content: personalizedResponse,
+        content: `I see you've just completed a skin analysis! ${response}\n\nIs there anything specific about these results you'd like me to explain in more detail?`,
         sender: 'bot',
         timestamp: new Date(),
       };
