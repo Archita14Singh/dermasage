@@ -1,4 +1,3 @@
-
 import { Message } from '@/types/chat';
 import SkinConditionService from './SkinConditionService';
 import { AnalysisResult } from '@/utils/skinAnalysisUtils';
@@ -26,21 +25,97 @@ class ChatService {
       const allergiesWarning = clientProfile?.allergies ? 
         `Note: Given your allergies to ${clientProfile.allergies}, I've excluded products containing these ingredients. ` : '';
       
+      // Diet and nutrition related questions
+      if (lowercaseInput.includes('diet') || lowercaseInput.includes('food') || lowercaseInput.includes('nutrition') || lowercaseInput.includes('eat')) {
+        resolve(`${personalizedIntro}Diet plays a crucial role in skin health${name}! Here are some recommendations:\n\n1. Stay hydrated with at least 8 glasses of water daily\n2. Consume foods rich in omega-3 fatty acids (salmon, walnuts)\n3. Eat antioxidant-rich fruits and vegetables (berries, leafy greens)\n4. Limit sugar and dairy if you notice they trigger breakouts\n5. Consider foods high in zinc (pumpkin seeds, chickpeas)\n\n${allergiesWarning}Would you like me to suggest a specific diet plan based on your skin concerns?`);
+      }
+      // Exercise related questions
+      else if (lowercaseInput.includes('exercise') || lowercaseInput.includes('workout') || lowercaseInput.includes('yoga')) {
+        resolve(`${personalizedIntro}Exercise can improve circulation and help your skin glow${name}! Here's what I suggest:\n\n1. Moderate cardio (walking, jogging) increases blood flow to the skin\n2. Yoga can reduce stress, which often triggers skin issues\n3. Be sure to wash your face after sweating to prevent clogged pores\n4. Stay hydrated during workouts\n5. Consider exercises that promote relaxation, as stress can exacerbate skin conditions\n\nHow often do you currently exercise, and have you noticed any correlation with your skin condition?`);
+      }
+      // Specific product recommendations
+      else if (lowercaseInput.includes('recommend') && (lowercaseInput.includes('cleanser') || lowercaseInput.includes('moisturizer') || lowercaseInput.includes('sunscreen'))) {
+        let productType = '';
+        let recommendations = '';
+        
+        if (lowercaseInput.includes('cleanser')) {
+          productType = 'cleanser';
+          if (clientProfile?.skinType === 'oily') {
+            recommendations = "1. CeraVe Foaming Facial Cleanser\n2. La Roche-Posay Toleriane Purifying Facial Cleanser\n3. Paula's Choice CLEAR Pore Normalizing Cleanser";
+          } else if (clientProfile?.skinType === 'dry') {
+            recommendations = "1. CeraVe Hydrating Facial Cleanser\n2. La Roche-Posay Toleriane Hydrating Gentle Cleanser\n3. Fresh Soy Face Cleanser";
+          } else {
+            recommendations = "1. CeraVe Hydrating Facial Cleanser\n2. Cetaphil Gentle Skin Cleanser\n3. Neutrogena Ultra Gentle Hydrating Cleanser";
+          }
+        } else if (lowercaseInput.includes('moisturizer')) {
+          productType = 'moisturizer';
+          if (clientProfile?.skinType === 'oily') {
+            recommendations = "1. Neutrogena Hydro Boost Water Gel\n2. La Roche-Posay Effaclar Mat Oil-Free Moisturizer\n3. CeraVe PM Facial Moisturizing Lotion";
+          } else if (clientProfile?.skinType === 'dry') {
+            recommendations = "1. CeraVe Moisturizing Cream\n2. First Aid Beauty Ultra Repair Cream\n3. Weleda Skin Food Original Ultra-Rich Cream";
+          } else {
+            recommendations = "1. CeraVe Daily Moisturizing Lotion\n2. Neutrogena Hydro Boost Water Gel\n3. Aveeno Calm + Restore Oat Gel Moisturizer";
+          }
+        } else if (lowercaseInput.includes('sunscreen')) {
+          productType = 'sunscreen';
+          if (clientProfile?.skinType === 'oily') {
+            recommendations = "1. Supergoop! Unseen Sunscreen SPF 40\n2. EltaMD UV Clear Broad-Spectrum SPF 46\n3. La Roche-Posay Anthelios Clear Skin Oil Free Sunscreen SPF 60";
+          } else if (clientProfile?.skinType === 'dry') {
+            recommendations = "1. EltaMD UV Daily Broad-Spectrum SPF 40\n2. CeraVe Hydrating Sunscreen SPF 50\n3. MISSHA Essence Sun Milk SPF 50+";
+          } else {
+            recommendations = "1. EltaMD UV Clear Broad-Spectrum SPF 46\n2. La Roche-Posay Anthelios Melt-in Milk SPF 100\n3. CeraVe Hydrating Sunscreen Face Lotion SPF 50";
+          }
+        }
+        
+        resolve(`${personalizedIntro}Based on your request for a ${productType}${name}, here are my top recommendations:\n\n${recommendations}\n\n${allergiesWarning}Would you like me to explain why these would work well for your skin type?`);
+      }
       // Detect questions about products without recommendations
-      if ((lowercaseInput.includes('product') || lowercaseInput.includes('recommend')) && 
+      else if ((lowercaseInput.includes('product') || lowercaseInput.includes('recommend')) && 
           !clientProfile && 
           !lowercaseInput.includes('acne') && 
           !lowercaseInput.includes('dry') && 
           !lowercaseInput.includes('oily')) {
         resolve(`Before I recommend specific products${name}, I'd like to understand your skin better. Could you tell me about your skin type (dry, oily, combination, sensitive)? Also, do you have any specific skin concerns or allergies I should be aware of?`);
       }
+      // Specific skin conditions - eczema
+      else if (lowercaseInput.includes('eczema')) {
+        resolve(`${personalizedIntro}Eczema requires gentle care${name}. Here's my advice:\n\n1. Use fragrance-free, gentle cleansers\n2. Moisturize immediately after bathing with a thick cream\n3. Consider products with colloidal oatmeal or ceramides\n4. Avoid hot water and harsh soaps\n5. Keep a trigger journal to identify what makes your eczema flare up\n\n${allergiesWarning}Have you identified any specific triggers for your eczema? I can help you develop a personalized management plan.`);
+      }
+      // Specific skin conditions - rosacea
+      else if (lowercaseInput.includes('rosacea')) {
+        resolve(`${personalizedIntro}For rosacea management${name}, I recommend:\n\n1. Use gentle, non-foaming cleansers\n2. Apply mineral-based sunscreen daily (zinc oxide/titanium dioxide)\n3. Consider products with anti-inflammatory ingredients like niacinamide\n4. Avoid known triggers: spicy foods, alcohol, extreme temperatures\n5. Look for products labeled for sensitive skin\n\n${allergiesWarning}What triggers have you noticed worsen your rosacea symptoms?`);
+      }
+      // Anti-aging questions
+      else if (lowercaseInput.includes('aging') || lowercaseInput.includes('wrinkle') || lowercaseInput.includes('fine lines')) {
+        resolve(`${personalizedIntro}For anti-aging skincare${name}, here's what I recommend:\n\n1. Retinol or retinoids are gold-standard for reducing wrinkles\n2. Vitamin C serums help with collagen production and brightness\n3. Peptides can help firm the skin\n4. Hyaluronic acid for hydration and plumping\n5. Always use SPF 30+ daily (this is the best anti-aging product!)\n\n${allergiesWarning}What specific aging concerns would you like to address? I can provide more targeted recommendations.`);
+      }
+      // Sunscreen questions
+      else if (lowercaseInput.includes('spf') || lowercaseInput.includes('sunscreen') || lowercaseInput.includes('sun protection')) {
+        resolve(`${personalizedIntro}Sun protection is essential for skin health${name}! Here's what you need to know:\n\n1. Use broad-spectrum SPF 30+ daily, even on cloudy days\n2. Apply approximately a quarter-sized amount for the face\n3. Reapply every 2 hours when outdoors\n4. Consider mineral sunscreens (zinc oxide, titanium dioxide) if you have sensitive skin\n5. Don't forget frequently missed areas: ears, neck, hands\n\n${allergiesWarning}Do you prefer chemical or mineral sunscreens? I can recommend specific products based on your preference.`);
+      }
+      // Ingredient questions
+      else if (lowercaseInput.includes('ingredient') || lowercaseInput.includes('retinol') || lowercaseInput.includes('niacinamide') || lowercaseInput.includes('vitamin c') || lowercaseInput.includes('hyaluronic')) {
+        let information = '';
+        if (lowercaseInput.includes('retinol')) {
+          information = "Retinol is a vitamin A derivative that increases cell turnover, boosts collagen, and helps with acne and wrinkles. Start with a low concentration (0.25-0.5%) 2-3 times weekly, gradually increasing frequency. Always use at night followed by moisturizer and sunscreen during the day.";
+        } else if (lowercaseInput.includes('niacinamide')) {
+          information = "Niacinamide (vitamin B3) strengthens the skin barrier, reduces inflammation, helps with acne, and evens skin tone. It's well-tolerated at 2-10% concentration and can be used morning and night. It pairs well with most ingredients, making it versatile for most routines.";
+        } else if (lowercaseInput.includes('vitamin c')) {
+          information = "Vitamin C is a powerful antioxidant that brightens skin, protects from UV damage, and stimulates collagen. L-ascorbic acid (15-20%) is the most potent form but can be unstable. Store in an opaque container away from light and heat. Best used in the morning under sunscreen.";
+        } else if (lowercaseInput.includes('hyaluronic')) {
+          information = "Hyaluronic acid is a humectant that draws moisture into the skin, holding up to 1000x its weight in water. Apply to damp skin for best results. It works at multiple skin layers for hydration without clogging pores. Safe for all skin types, including acne-prone skin.";
+        } else {
+          information = "Skincare ingredients serve different purposes: humectants (glycerin, hyaluronic acid) attract moisture, occlusives (petrolatum, shea butter) seal in moisture, emollients (oils) soften skin, antioxidants (vitamins C, E) protect from damage, and actives (retinoids, AHAs) address specific concerns.";
+        }
+        resolve(`${personalizedIntro}${information}\n\n${allergiesWarning}Do you have questions about any other specific ingredients or how to incorporate them into your routine?`);
+      }
       // Detect general questions about skin care
       else if (lowercaseInput.includes('what') && lowercaseInput.includes('skin') && lowercaseInput.includes('care')) {
         resolve(`Great question${name}! Skincare is highly personal and depends on your skin type and concerns. A basic routine includes cleansing, treating specific concerns, moisturizing, and sun protection. Would you like me to suggest a routine specifically for your skin type? If so, could you share what type of skin you have?`);
       }
       // Handle acne concerns with more conversation
-      else if (lowercaseInput.includes('acne') || lowercaseInput.includes('pimple')) {
-        resolve(`${personalizedIntro}I understand dealing with acne can be frustrating${name}. Let me help!\n\nFor acne concerns, I recommend:\n\n1. Use a gentle cleanser with salicylic acid\n2. Try a benzoyl peroxide spot treatment\n3. Don't pick or pop pimples\n4. Consider a non-comedogenic moisturizer\n\n${allergiesWarning}How severe is your acne, and have you tried any treatments before? This would help me give more tailored recommendations.`);
+      else if (lowercaseInput.includes('acne') || lowercaseInput.includes('pimple') || lowercaseInput.includes('breakout')) {
+        resolve(`${personalizedIntro}I understand dealing with acne can be frustrating${name}. Let me help!\n\n1. Use a gentle cleanser with salicylic acid\n2. Try a benzoyl peroxide spot treatment\n3. Don't pick or pop pimples\n4. Consider a non-comedogenic moisturizer\n5. Check if makeup or hair products are clogging pores\n\n${allergiesWarning}How severe is your acne, and have you tried any treatments before? This would help me give more tailored recommendations.`);
       } 
       // Handle dry skin with more conversation
       else if (lowercaseInput.includes('dry') || lowercaseInput.includes('flaky')) {
@@ -48,7 +123,7 @@ class ChatService {
       }
       // Handle oily skin with more conversation
       else if (lowercaseInput.includes('oily') || lowercaseInput.includes('shine')) {
-        resolve(`${personalizedIntro}I understand that dealing with oily skin can be challenging${name}. Here are my recommendations:\n\n1. Use a gentle foaming cleanser\n2. Try niacinamide serum to regulate sebum\n3. Use oil-free, non-comedogenic moisturizers\n4. Consider clay masks once or twice weekly\n\n${allergiesWarning}Do you notice your skin gets oilier during certain times of day or in specific seasons? This would help me tailor my advice further.`);
+        resolve(`${personalizedIntro}I understand that dealing with oily skin can be challenging${name}. Here are my recommendations:\n\n1. Use a gentle foaming cleanser\n2. Try niacinamide serum to regulate sebum\n3. Use oil-free, non-comedogenic moisturizers\n4. Consider clay masks once or twice weekly\n5. Don't skip moisturizer - dehydration can increase oil production\n\n${allergiesWarning}Do you notice your skin gets oilier during certain times of day or in specific seasons? This would help me tailor my advice further.`);
       }
       // Handle routines with more conversation
       else if (lowercaseInput.includes('routine') || lowercaseInput.includes('regimen')) {

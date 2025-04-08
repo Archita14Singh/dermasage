@@ -14,7 +14,7 @@ interface ProgressChartProps {
   data: ProgressData[];
 }
 
-const customTooltip = ({ active, payload }: any) => {
+const customTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     return (
       <div className="bg-white p-3 border rounded-lg shadow-sm">
@@ -36,6 +36,15 @@ const customTooltip = ({ active, payload }: any) => {
 };
 
 const ProgressChart: React.FC<ProgressChartProps> = ({ data }) => {
+  // Don't render if there's no data
+  if (!data || data.length === 0) {
+    return (
+      <div className="h-[350px] w-full flex items-center justify-center">
+        <p className="text-muted-foreground">No data available</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[350px] w-full">
       <ResponsiveContainer width="100%" height="100%">
@@ -44,7 +53,11 @@ const ProgressChart: React.FC<ProgressChartProps> = ({ data }) => {
           margin={{ top: 20, right: 30, left: 0, bottom: 20 }}
         >
           <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-          <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+          <XAxis 
+            dataKey="date" 
+            tick={{ fontSize: 12 }}
+            padding={{ left: 10, right: 10 }}
+          />
           <YAxis 
             domain={[0, 100]} 
             tick={{ fontSize: 12 }} 

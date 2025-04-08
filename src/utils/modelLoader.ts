@@ -11,6 +11,7 @@ export const loadSkinAnalysisModel = async () => {
   
   // If already loading, return the existing promise
   if (loadingPromise) {
+    console.log('Skin analysis model already loading, returning existing promise');
     return loadingPromise;
   }
   
@@ -23,17 +24,21 @@ export const loadSkinAnalysisModel = async () => {
   // Create a new loading promise
   loadingPromise = new Promise<boolean>((resolve, reject) => {
     try {
-      // Simulate model loading
-      setTimeout(() => {
+      // Simulate model loading with a more reliable approach
+      const loadTimeout = setTimeout(() => {
         console.log('Skin analysis model loaded successfully');
         modelInitialized = true;
         loadingPromise = null;
         resolve(true);
+        
+        // Clear the timeout to prevent memory leaks
+        clearTimeout(loadTimeout);
       }, 1000);
     } catch (error) {
       console.error('Error loading skin analysis model:', error);
       toast.error('Failed to load the skin analysis model. Please try again.');
       loadingPromise = null;
+      modelInitialized = false;
       reject(new Error('Failed to load model'));
     }
   });
@@ -50,6 +55,13 @@ export const ensureModelLoaded = async () => {
     await loadSkinAnalysisModel();
     return true;
   } catch (error) {
+    console.error('Error ensuring model is loaded:', error);
     return false;
   }
+};
+
+// Reset model state (useful for testing)
+export const resetModel = () => {
+  modelInitialized = false;
+  loadingPromise = null;
 };

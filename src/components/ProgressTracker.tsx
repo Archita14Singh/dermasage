@@ -17,6 +17,7 @@ const ProgressTracker: React.FC = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedEntry, setSelectedEntry] = useState<string | null>(null);
   const [showAddEntryDialog, setShowAddEntryDialog] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("journal"); // Default to journal tab
   
   const { 
     journalEntries, 
@@ -26,59 +27,64 @@ const ProgressTracker: React.FC = () => {
     improvements 
   } = useJournalEntries(date);
   
+  // Show prompt to add entry if no entries exist
+  useEffect(() => {
+    if (journalEntries.length === 0) {
+      toast("Start your skin journey by adding your first journal entry", {
+        action: {
+          label: "Add Entry",
+          onClick: () => setShowAddEntryDialog(true),
+        },
+      });
+    }
+  }, [journalEntries.length]);
+  
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="progress" className="w-full">
+      <Tabs 
+        defaultValue="journal" 
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
         <TabsList className="grid w-full grid-cols-2 mb-4">
-          <TabsTrigger value="progress">Progress Tracking</TabsTrigger>
           <TabsTrigger value="journal">Skin Journal</TabsTrigger>
+          <TabsTrigger value="progress">Progress Charts</TabsTrigger>
         </TabsList>
-        
-        <TabsContent value="progress">
-          <Card className="glass-card animate-fade-in">
-            <CardHeader>
-              <CardTitle className="text-xl font-medium">Skin Condition Progress</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {formattedData.length > 0 ? (
-                <ProgressChart data={formattedData} />
-              ) : (
-                <div className="h-[350px] w-full flex items-center justify-center">
-                  <div className="text-center">
-                    <p className="text-muted-foreground mb-4">No progress data available yet.</p>
-                    <Button onClick={() => setShowAddEntryDialog(true)}>Add First Journal Entry</Button>
-                  </div>
-                </div>
-              )}
-              
-              {improvements && <ProgressStats improvements={improvements} />}
-            </CardContent>
-          </Card>
-        </TabsContent>
         
         <TabsContent value="journal">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="glass-card h-auto animate-fade-in col-span-1">
               <CardHeader>
-                <CardTitle className="text-lg font-medium">Select Date</CardTitle>
+                <CardTitle className="text-lg font-medium">Track Your Journey</CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
                 <JournalCalendar 
                   date={date}
                   onSelectDate={setDate}
                   journalEntries={journalEntries}
                 />
                 
-                <div className="mt-4">
-                  <Button 
-                    className="w-full flex items-center justify-center gap-2"
-                    variant="outline"
-                    onClick={() => setShowAddEntryDialog(true)}
-                  >
-                    <Camera className="w-4 h-4" />
-                    <span>Add New Entry</span>
-                  </Button>
-                </div>
+                <Button 
+                  className="w-full flex items-center justify-center gap-2"
+                  onClick={() => setShowAddEntryDialog(true)}
+                >
+                  <Camera className="w-4 h-4" />
+                  <span>Add Today's Entry</span>
+                </Button>
+
+                {improvements && journalEntries.length > 1 && (
+                  <div className="pt-4 border-t">
+                    <h3 className="text-sm font-medium mb-2">Overall Progress</h3>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => setActiveTab("progress")}
+                    >
+                      View Progress Charts
+                    </Button>
+                  </div>
+                )}
               </CardContent>
             </Card>
             
@@ -138,6 +144,52 @@ const ProgressTracker: React.FC = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+        
+        <TabsContent value="progress">
+          <Card className="glass-card animate-fade-in">
+            <CardHeader>
+              <CardTitle className="text-xl font-medium flex justify-between items-center">
+                <span>Skin Condition Progress</span>
+                {journalEntries.length < 2 && (
+                  <Button size="sm" onClick={() => setShowAddEntryDialog(true)}>
+                    Add More Entries
+                  </Button>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {formattedData.length > 1 ? (
+                <>
+                  <ProgressChart data={formattedData} />
+                  {improvements && <ProgressStats improvements={improvements} />}
+                </>
+              ) : (
+                <div className="h-[350px] w-full flex items-center justify-center">
+                  <div className="text-center">
+                    <p className="text-muted-foreground mb-4">
+                      {formattedData.length === 0 
+                        ? "No progress data available yet." 
+                        : "Add more journal entries to see your progress charted over time."}
+                    </p>
+                    <Button onClick={() => setShowAddEntryDialog(true)}>
+                      {formattedData.length === 0 ? "Add First Journal Entry" : "Add Another Entry"}
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
+              <div className="mt-6 border-t pt-6">
+                <h3 className="text-lg font-medium mb-4">Understanding Your Progress Chart</h3>
+                <div className="text-sm text-muted-foreground space-y-2">
+                  <p>• <strong>Lower values</strong> for Acne and Redness indicate improvement (less severity)</p>
+                  <p>• <strong>Higher values</strong> for Hydration show better moisture retention</p>
+                  <p>• Your <strong>Overall Skin Health</strong> score combines all factors</p>
+                  <p>• Track more accurately by adding regular journal entries with consistent photos</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
       </Tabs>
       

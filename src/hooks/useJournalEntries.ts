@@ -9,6 +9,12 @@ export interface JournalEntry {
   notes: string;
   products: string[];
   concerns: string[];
+  metrics?: {
+    acne: number;
+    redness: number;
+    hydration: number;
+    overall: number;
+  };
 }
 
 interface ProgressData {
@@ -26,68 +32,54 @@ interface Improvements {
   overall: number;
 }
 
-// Mock data for initial display
-const initialJournalEntries: JournalEntry[] = [
-  {
-    id: '1',
-    date: new Date('2023-11-12'),
-    image: 'https://images.unsplash.com/photo-1508184964240-ee96bb9677a7?q=80&w=200&auto=format&fit=crop',
-    notes: 'Skin is looking clearer today. The new moisturizer seems to be helping with hydration.',
-    products: ['Gentle Cleanser', 'Hyaluronic Acid Serum', 'Moisturizer SPF 30'],
-    concerns: ['dryness', 'redness'],
-  },
-  {
-    id: '2',
-    date: new Date('2023-11-05'),
-    image: 'https://images.unsplash.com/photo-1619946794135-5bc917a27793?q=80&w=200&auto=format&fit=crop',
-    notes: 'Had a breakout around chin area. Might be stress-related.',
-    products: ['Gentle Cleanser', 'Salicylic Acid Treatment', 'Oil-free Moisturizer'],
-    concerns: ['acne', 'oiliness'],
-  },
-  {
-    id: '3',
-    date: new Date('2023-10-29'),
-    image: 'https://images.unsplash.com/photo-1614283233556-f35b0c801ef1?q=80&w=200&auto=format&fit=crop',
-    notes: 'Noticing some improvement in texture. Still have some redness around nose.',
-    products: ['Gentle Cleanser', 'Niacinamide Serum', 'Moisturizer SPF 30'],
-    concerns: ['texture', 'redness'],
-  },
-];
-
-// Generate progress data from journal entries
-const generateProgressData = (journalEntries: JournalEntry[]): ProgressData[] => {
-  const sortedEntries = [...journalEntries].sort((a, b) => a.date.getTime() - b.date.getTime());
-  let progressData: ProgressData[] = [];
+// Calculate metrics based on concerns
+const calculateMetrics = (concerns: string[]) => {
+  const hasDryness = concerns.includes('dryness');
+  const hasAcne = concerns.includes('acne');
+  const hasRedness = concerns.includes('redness');
+  const hasOiliness = concerns.includes('oiliness');
   
-  return sortedEntries.map((entry, index) => {
-    // Generate progress metrics based on journal entries
-    const hasDryness = entry.concerns.includes('dryness');
-    const hasAcne = entry.concerns.includes('acne');
-    const hasRedness = entry.concerns.includes('redness');
+  // Base values (higher is worse for acne and redness, lower is worse for hydration)
+  let acne = hasAcne ? 70 : 30;
+  let redness = hasRedness ? 60 : 25;
+  let hydration = hasDryness ? 30 : 70;
+  
+  // Adjust for oiliness
+  if (hasOiliness) {
+    acne += 15;
+    hydration += 10;
+  }
+  
+  // Limit to 0-100 range
+  acne = Math.min(Math.max(acne, 0), 100);
+  redness = Math.min(Math.max(redness, 0), 100);
+  hydration = Math.min(Math.max(hydration, 0), 100);
+  
+  // Overall score (inverse of problems, higher is better)
+  const overall = Math.min(100 - (acne + redness) / 4 + hydration / 3, 100);
+  
+  return {
+    acne,
+    redness,
+    hydration,
+    overall: Math.round(overall)
+  };
+};
+
+// Generate progress data directly from journal entries
+const generateProgressData = (journalEntries: JournalEntry[]): ProgressData[] => {
+  // Sort entries by date
+  const sortedEntries = [...journalEntries].sort((a, b) => a.date.getTime() - b.date.getTime());
+  
+  // Map each entry to progress data
+  return sortedEntries.map(entry => {
+    // Use existing metrics if available, otherwise calculate
+    const metrics = entry.metrics || calculateMetrics(entry.concerns);
     
-    // Start with base values or use the previous entry's values
-    const baseAcne = index === 0 ? 70 : progressData[index - 1]?.acne || 70;
-    const baseRedness = index === 0 ? 45 : progressData[index - 1]?.redness || 45;
-    const baseHydration = index === 0 ? 30 : progressData[index - 1]?.hydration || 30;
-    
-    // Adjust based on concerns
-    const acne = hasAcne ? baseAcne : Math.max(baseAcne - 10, 0);
-    const redness = hasRedness ? baseRedness : Math.max(baseRedness - 5, 0);
-    const hydration = hasDryness ? baseHydration : Math.min(baseHydration + 10, 100);
-    
-    // Calculate overall score (inverse of problems, higher is better)
-    const overall = Math.min(100 - (acne + redness) / 3 + hydration / 3, 100);
-    
-    const data = {
+    return {
       date: entry.date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-      acne,
-      redness,
-      hydration,
-      overall,
+      ...metrics
     };
-    
-    progressData.push(data);
-    return data;
   });
 };
 
@@ -99,12 +91,39 @@ const calculateImprovements = (formattedData: ProgressData[]): Improvements | nu
   const last = formattedData[formattedData.length - 1];
   
   return {
+    // For acne and redness, improvement means reduction (so we want positive percentages)
     acne: Math.round(((first.acne - last.acne) / first.acne) * 100),
     redness: Math.round(((first.redness - last.redness) / first.redness) * 100),
+    // For hydration, improvement means increase
     hydration: Math.round(((last.hydration - first.hydration) / first.hydration) * 100),
+    // For overall, improvement means increase
     overall: Math.round(((last.overall - first.overall) / first.overall) * 100)
   };
 };
+
+// Current date-based entry
+const generateCurrentDateEntry = (): JournalEntry => {
+  const now = new Date();
+  return {
+    id: 'today',
+    date: now,
+    image: 'https://images.unsplash.com/photo-1508184964240-ee96bb9677a7?q=80&w=200&auto=format&fit=crop',
+    notes: 'Initial assessment. Starting my skincare journey today!',
+    products: ['Gentle Cleanser', 'Basic Moisturizer'],
+    concerns: ['dryness'],
+    metrics: {
+      acne: 40,
+      redness: 35,
+      hydration: 45,
+      overall: 60
+    }
+  };
+};
+
+// Initial journal entries with metrics
+const initialJournalEntries: JournalEntry[] = [
+  generateCurrentDateEntry()
+];
 
 export const useJournalEntries = (date?: Date) => {
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
@@ -139,10 +158,14 @@ export const useJournalEntries = (date?: Date) => {
     : [];
   
   // Add a new journal entry
-  const addJournalEntry = (newEntry: Omit<JournalEntry, 'id'>) => {
+  const addJournalEntry = (newEntry: Omit<JournalEntry, 'id' | 'metrics'>) => {
+    // Calculate metrics based on concerns
+    const metrics = calculateMetrics(newEntry.concerns);
+    
     const entry: JournalEntry = {
       id: Date.now().toString(),
-      ...newEntry
+      ...newEntry,
+      metrics
     };
     
     const updatedEntries = [...journalEntries, entry];
