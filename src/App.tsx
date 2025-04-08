@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/context/ThemeContext";
 import Index from "./pages/Index";
 import Chat from "./pages/Chat";
+import Analysis from "./pages/Analysis";
 import Progress from "./pages/Progress";
 import NotFound from "./pages/NotFound";
 import DatasetPage from './pages/Dataset';
@@ -23,6 +24,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/analysis" element={<Analysis />} />
             <Route path="/progress" element={<Progress />} />
             <Route path="/dataset" element={<DatasetPage />} />
             <Route path="*" element={<NotFound />} />
