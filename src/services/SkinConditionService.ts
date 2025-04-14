@@ -1,7 +1,7 @@
 
 import { toast } from 'sonner';
-import { loadSkinAnalysisModel } from '@/utils/modelLoader';
-import { analyzeSkinCondition, AnalysisResult } from '@/utils/skinAnalysisUtils';
+import { loadSkinAnalysisModel, loadAllModels } from '@/utils/modelLoader';
+import { analyzeSkinCondition, AnalysisResult, AcneType } from '@/utils/skinAnalysisUtils';
 
 type ClientProfile = {
   name: string;
@@ -12,10 +12,16 @@ type ClientProfile = {
 } | null;
 
 export class SkinConditionService {
-  static async analyzeImage(imageData: string): Promise<AnalysisResult> {
+  static async analyzeImage(imageData: string, useAdvancedModels = true): Promise<AnalysisResult> {
     try {
-      // Ensure model is loaded
-      await loadSkinAnalysisModel();
+      // Load models based on analysis type
+      if (useAdvancedModels) {
+        // Start loading all models in parallel, don't wait
+        loadAllModels();
+      } else {
+        // Just load the basic model and wait for it
+        await loadSkinAnalysisModel();
+      }
       
       // Analyze the image
       const results = await analyzeSkinCondition(imageData);
@@ -51,6 +57,54 @@ export class SkinConditionService {
       response += `• ${condition.condition}: ${severityText} (${Math.round(condition.confidence * 100)}% confidence)\n`;
     });
     
+    // Add advanced analysis results if available
+    if (analysis.usedAdvancedModels) {
+      response += `\n📊 Advanced Analysis Results:\n`;
+      
+      // Add CNN acne classification results
+      if (analysis.acneTypes) {
+        response += `Acne Classification: `;
+        const acneTypes = Object.entries(analysis.acneTypes)
+          .sort((a, b) => b[1] - a[1]) // Sort by confidence descending
+          .slice(0, 3); // Take top 3
+          
+        response += acneTypes
+          .map(([type, confidence]) => `${type} (${Math.round(confidence * 100)}%)`)
+          .join(', ') + '\n';
+          
+        // Add specific advice for primary acne type
+        const [primaryType, _] = acneTypes[0];
+        response += `\nFor your primary ${primaryType} acne, consider these targeted approaches:\n`;
+        
+        switch (primaryType as AcneType) {
+          case 'hormonal':
+            response += `• Track breakouts in relation to hormonal cycles\n• Consider consulting a dermatologist about hormonal treatments\n• Focus on anti-inflammatory ingredients like niacinamide\n`;
+            break;
+          case 'cystic':
+            response += `• Avoid picking which can cause scarring\n• Ice inflamed areas to reduce pain and swelling\n• Consult a dermatologist as prescription treatments are often needed\n`;
+            break;
+          case 'comedonal':
+            response += `• Focus on gentle chemical exfoliation with BHAs\n• Consider retinoids to normalize cell turnover\n• Look for "non-comedogenic" products\n`;
+            break;
+          case 'fungal':
+            response += `• Use anti-fungal treatments like ketoconazole\n• Avoid oils and fatty acids that feed malassezia\n• Look for "fungal acne safe" products\n`;
+            break;
+          default:
+            response += `• Keep skin clean but don't over-cleanse\n• Use targeted treatments with ingredients like salicylic acid\n• Stay consistent with your routine\n`;
+        }
+      }
+      
+      // Add YOLO detection results if available
+      if (analysis.detectedObjects && analysis.detectedObjects.length > 0) {
+        response += `\nDetected Features: `;
+        const detections = analysis.detectedObjects
+          .sort((a, b) => b.confidence - a.confidence)
+          .map(obj => `${obj.label} (${Math.round(obj.confidence * 100)}%)`);
+          
+        response += detections.join(', ') + '\n';
+      }
+    }
+    
     response += `\nBased on this analysis, here are my recommendations:\n`;
     
     // Customize recommendations based on client profile if available
@@ -75,6 +129,30 @@ export class SkinConditionService {
       response += `${index + 1}. ${rec}\n`;
     });
     
+    // Add product recommendations with links
+    response += `\nProduct recommendations based on your analysis:\n`;
+    
+    // Determine product recommendations based on main condition
+    const mainCondition = analysis.conditions.sort((a, b) => b.confidence - a.confidence)[0]?.condition.toLowerCase();
+    
+    if (mainCondition.includes('acne')) {
+      response += `• Cleanser: CeraVe Acne Foaming Cream Cleanser - [Amazon](https://www.amazon.com/CeraVe-Cleanser-Treating-Salicylic-Niacinamide/dp/B08KPZDGN8)\n`;
+      response += `• Treatment: Paula's Choice 2% BHA Liquid Exfoliant - [Amazon](https://www.amazon.com/Paulas-Choice-SKIN-PERFECTING-Exfoliant-Gentle/dp/B00949CTQQ)\n`;
+      response += `• Spot Treatment: La Roche-Posay Effaclar Duo - [Amazon](https://www.amazon.com/Roche-Posay-Effaclar-Treatment-Benzoyl-Peroxide/dp/B00CBDOXE4)\n`;
+    } else if (mainCondition.includes('dry')) {
+      response += `• Cleanser: CeraVe Hydrating Facial Cleanser - [Amazon](https://www.amazon.com/CeraVe-Hydrating-Facial-Cleanser-Fragrance/dp/B01MSSDEPK)\n`;
+      response += `• Serum: The Ordinary Hyaluronic Acid 2% + B5 - [Amazon](https://www.amazon.com/Ordinary-Hyaluronic-Acid-2-30ml/dp/B07ZNKRJ9D)\n`;
+      response += `• Moisturizer: CeraVe Moisturizing Cream - [Amazon](https://www.amazon.com/CeraVe-Moisturizing-Cream-Daily-Moisturizer/dp/B00TTD9BRC)\n`;
+    } else if (mainCondition.includes('pigment') || mainCondition.includes('hyperpigment')) {
+      response += `• Serum: The Ordinary Alpha Arbutin 2% + HA - [Amazon](https://www.amazon.com/Ordinary-Alpha-Arbutin-2-HA/dp/B06WGPMD78)\n`;
+      response += `• Treatment: Paula's Choice 10% Azelaic Acid Booster - [Amazon](https://www.amazon.com/Paulas-Choice-BOOST-Azelaic-Brightening-Treatment/dp/B074ZLRPHC)\n`;
+      response += `• Sunscreen: EltaMD UV Clear Broad-Spectrum SPF 46 - [Amazon](https://www.amazon.com/EltaMD-Clear-Facial-Sunscreen-Broad-Spectrum/dp/B002MSN3QQ)\n`;
+    } else {
+      response += `• Cleanser: Cetaphil Gentle Skin Cleanser - [Amazon](https://www.amazon.com/Cetaphil-Gentle-Cleanser-Face-Ounce/dp/B07GC74LL5)\n`;
+      response += `• Moisturizer: CeraVe Daily Moisturizing Lotion - [Amazon](https://www.amazon.com/CeraVe-Moisturizing-Lotion-Hyaluronic-Fragrance/dp/B000YZ8QPU)\n`;
+      response += `• Sunscreen: La Roche-Posay Anthelios Melt-in Milk SPF 100 - [Amazon](https://www.amazon.com/Roche-Posay-Anthelios-Sunscreen-Spectrum-Protectant/dp/B00HNSSV2U)\n`;
+    }
+    
     // Add age-specific advice if available
     if (clientProfile?.age) {
       const age = parseInt(clientProfile.age);
@@ -91,7 +169,7 @@ export class SkinConditionService {
       }
     }
     
-    response += `\n\nWould you like more specific recommendations for any of these concerns?`;
+    response += `\n\nWould you like more specific recommendations for any of these concerns? Or would you like me to explain more about the advanced analysis findings?`;
     
     return response;
   }

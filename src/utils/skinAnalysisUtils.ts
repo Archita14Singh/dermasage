@@ -1,6 +1,6 @@
 
 import { toast } from 'sonner';
-import { loadSkinAnalysisModel } from './modelLoader';
+import { loadSkinAnalysisModel, ensureModelLoaded } from './modelLoader';
 
 // In a production app, this would use a real ML model for analysis
 // For the prototype, we'll return simulated results
@@ -12,21 +12,37 @@ export type SkinCondition = {
   recommendations: string[];
 };
 
+export type AcneType = 'papules' | 'pustules' | 'nodular' | 'cystic' | 'comedonal' | 'hormonal' | 'fungal';
+
+export type DetectedObject = {
+  label: string;
+  confidence: number;
+  position: { x: number, y: number, width: number, height: number };
+};
+
 export type AnalysisResult = {
   conditions: SkinCondition[];
   overall: string;
   skinType: string;
+  // Advanced model outputs
+  acneTypes?: Record<AcneType, number>; // From CNN classification
+  detectedObjects?: DetectedObject[]; // From YOLO detection
+  usedAdvancedModels?: boolean;
 };
 
 export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisResult> => {
   console.log('Analyzing skin condition...');
   
   try {
-    // Ensure model is loaded
-    await loadSkinAnalysisModel();
+    // First load the general model
+    await loadSkinAnalysisModel('general');
+    
+    // Try to load advanced models (but don't block analysis if they fail)
+    const loadYolo = loadSkinAnalysisModel('yolo-detection');
+    const loadCnn = loadSkinAnalysisModel('cnn-classification');
     
     // For prototype, return mock data
-    // In production, this would process the image with the ML model
+    // In production, this would process the image with the ML models
     
     // Add some randomness for demo purposes
     const randomFactor = Math.random() * 0.2;
@@ -90,8 +106,110 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
         }
       ],
       overall: 'Your skin shows signs of combination type with some inflammatory concerns. The primary issues appear to be acne and dryness, with moderate redness. A consistent skincare routine would help address these concerns.',
-      skinType: 'Combination'
+      skinType: 'Combination',
+      usedAdvancedModels: false
     };
+    
+    // Try to wait for advanced models to load, with a timeout
+    try {
+      await Promise.all([
+        Promise.race([loadYolo, new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))]),
+        Promise.race([loadCnn, new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))])
+      ]);
+      
+      // If we get here, both advanced models loaded successfully
+      mockResult.usedAdvancedModels = true;
+      
+      // Add CNN model results - acne type classification
+      mockResult.acneTypes = {
+        papules: 0.15 + (Math.random() * 0.2),
+        pustules: 0.25 + (Math.random() * 0.3),
+        nodular: 0.05 + (Math.random() * 0.1),
+        cystic: 0.08 + (Math.random() * 0.15),
+        comedonal: 0.35 + (Math.random() * 0.3),
+        hormonal: 0.20 + (Math.random() * 0.3),
+        fungal: 0.02 + (Math.random() * 0.05)
+      };
+      
+      // Add YOLO model results - object detection 
+      mockResult.detectedObjects = [
+        {
+          label: 'acne_lesion',
+          confidence: 0.89 + (Math.random() * 0.1),
+          position: { x: 120, y: 80, width: 20, height: 20 }
+        },
+        {
+          label: 'pore',
+          confidence: 0.76 + (Math.random() * 0.1),
+          position: { x: 200, y: 150, width: 15, height: 15 }
+        },
+        {
+          label: 'scar',
+          confidence: 0.65 + (Math.random() * 0.2),
+          position: { x: 180, y: 220, width: 25, height: 15 }
+        },
+        {
+          label: 'blackhead',
+          confidence: 0.81 + (Math.random() * 0.15),
+          position: { x: 250, y: 100, width: 10, height: 10 }
+        },
+        {
+          label: 'hyperpigmentation',
+          confidence: 0.72 + (Math.random() * 0.15),
+          position: { x: 300, y: 180, width: 30, height: 20 }
+        }
+      ];
+      
+      // Update the overall analysis based on advanced model results
+      let primaryAcneType = "";
+      let maxConfidence = 0;
+      
+      for (const [type, confidence] of Object.entries(mockResult.acneTypes)) {
+        if (confidence > maxConfidence) {
+          maxConfidence = confidence;
+          primaryAcneType = type;
+        }
+      }
+      
+      // Enhanced analysis with acne classification
+      if (primaryAcneType) {
+        // Find the acne condition and update it
+        const acneCondition = mockResult.conditions.find(c => c.condition === 'Acne');
+        if (acneCondition) {
+          acneCondition.condition = `Acne (primarily ${primaryAcneType})`;
+          
+          // Add specialized recommendations based on acne type
+          if (primaryAcneType === 'hormonal') {
+            acneCondition.recommendations = [
+              'Consider seeing a dermatologist about spironolactone or other hormonal treatments',
+              'Use products with ingredients like salicylic acid and retinoids',
+              'Track breakouts in relation to your menstrual cycle',
+              'Try spearmint tea which may have anti-androgenic properties'
+            ];
+          } else if (primaryAcneType === 'cystic' || primaryAcneType === 'nodular') {
+            acneCondition.recommendations = [
+              'Consult a dermatologist as prescription treatments are often needed',
+              'Use gentle, non-irritating products to minimize inflammation',
+              'Ice inflamed areas briefly to reduce swelling',
+              'Consider LED blue light therapy to kill bacteria'
+            ];
+          } else if (primaryAcneType === 'fungal') {
+            acneCondition.recommendations = [
+              'Use anti-fungal treatments like ketoconazole shampoo as a mask',
+              'Avoid oils and fatty acids that feed malassezia',
+              'Consider zinc pyrithione products',
+              'Look for "fungal acne safe" products'
+            ];
+          }
+        }
+      }
+      
+      toast.success('Advanced analysis complete', {
+        description: 'Enhanced skin analysis with CNN and YOLO models applied successfully'
+      });
+    } catch (error) {
+      console.log('Advanced models could not be loaded in time, using basic analysis only');
+    }
     
     console.log('Analysis complete:', mockResult);
     return mockResult;
