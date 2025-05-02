@@ -14,6 +14,14 @@ export type SkinCondition = {
 
 export type AcneType = 'papules' | 'pustules' | 'nodular' | 'cystic' | 'comedonal' | 'hormonal' | 'fungal';
 
+export type WrinkleType = 'fine_lines' | 'deep_wrinkles' | 'crow_feet' | 'nasolabial_folds' | 'forehead_lines';
+
+export type PigmentationType = 'melasma' | 'post_inflammatory' | 'sun_spots' | 'freckles' | 'age_spots';
+
+export type SkinTextureType = 'rough' | 'smooth' | 'uneven' | 'bumpy' | 'scaly' | 'dehydrated';
+
+export type PoreType = 'enlarged' | 'clogged' | 'normal' | 'minimal';
+
 export type DetectedObject = {
   label: string;
   confidence: number;
@@ -26,6 +34,10 @@ export type AnalysisResult = {
   skinType: string;
   // Advanced model outputs
   acneTypes?: Record<AcneType, number>; // From CNN classification
+  wrinkleTypes?: Record<WrinkleType, number>; // From wrinkle detection model
+  pigmentationTypes?: Record<PigmentationType, number>; // From pigmentation analysis
+  skinTextureTypes?: Record<SkinTextureType, number>; // From texture analysis
+  poreTypes?: Record<PoreType, number>; // From pore analysis
   detectedObjects?: DetectedObject[]; // From YOLO detection
   usedAdvancedModels?: boolean;
 };
@@ -40,6 +52,10 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
     // Try to load advanced models (but don't block analysis if they fail)
     const loadYolo = loadSkinAnalysisModel('yolo-detection');
     const loadCnn = loadSkinAnalysisModel('cnn-classification');
+    const loadWrinkle = loadSkinAnalysisModel('wrinkle-detection');
+    const loadPigment = loadSkinAnalysisModel('pigmentation-analysis');
+    const loadTexture = loadSkinAnalysisModel('skin-texture-analysis');
+    const loadPore = loadSkinAnalysisModel('pore-analysis');
     
     // For prototype, return mock data
     // In production, this would process the image with the ML models
@@ -103,9 +119,42 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
             'Consider alpha arbutin or tranexamic acid products',
             'Be patient - hyperpigmentation takes time to fade'
           ]
+        },
+        {
+          condition: 'Fine Lines',
+          confidence: 0.35 + (Math.random() * 0.25),
+          severity: 'low',
+          recommendations: [
+            'Incorporate retinol into your evening skincare routine',
+            'Use products with peptides to support collagen production',
+            'Add a hydrating hyaluronic acid serum to plump skin',
+            'Ensure you're using sufficient SPF daily to prevent further damage'
+          ]
+        },
+        {
+          condition: 'Enlarged Pores',
+          confidence: 0.45 + (Math.random() * 0.2),
+          severity: 'moderate',
+          recommendations: [
+            'Use a BHA (salicylic acid) product to clear pores',
+            'Consider clay masks 1-2 times weekly',
+            'Use a non-comedogenic moisturizer',
+            'Try niacinamide to help regulate sebum and minimize pore appearance'
+          ]
+        },
+        {
+          condition: 'Uneven Texture',
+          confidence: 0.38 + (Math.random() * 0.2),
+          severity: 'moderate',
+          recommendations: [
+            'Incorporate gentle chemical exfoliation with AHAs',
+            'Consider adding a rice-based exfoliant for smoother texture',
+            'Use humectants like glycerin to improve hydration',
+            'Try a facial oil with linoleic acid if your skin is combination'
+          ]
         }
       ],
-      overall: 'Your skin shows signs of combination type with some inflammatory concerns. The primary issues appear to be acne and dryness, with moderate redness. A consistent skincare routine would help address these concerns.',
+      overall: 'Your skin shows signs of combination type with multiple concerns. The primary issues appear to be acne, dryness, and texture irregularities, with moderate redness. A customized skincare routine addressing these specific concerns would help improve your skin health.',
       skinType: 'Combination',
       usedAdvancedModels: false
     };
@@ -114,10 +163,14 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
     try {
       await Promise.all([
         Promise.race([loadYolo, new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))]),
-        Promise.race([loadCnn, new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))])
+        Promise.race([loadCnn, new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))]),
+        Promise.race([loadWrinkle, new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))]),
+        Promise.race([loadPigment, new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))]),
+        Promise.race([loadTexture, new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))]),
+        Promise.race([loadPore, new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 3000))])
       ]);
       
-      // If we get here, both advanced models loaded successfully
+      // If we get here, advanced models loaded successfully
       mockResult.usedAdvancedModels = true;
       
       // Add CNN model results - acne type classification
@@ -129,6 +182,42 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
         comedonal: 0.35 + (Math.random() * 0.3),
         hormonal: 0.20 + (Math.random() * 0.3),
         fungal: 0.02 + (Math.random() * 0.05)
+      };
+      
+      // Add wrinkle analysis results
+      mockResult.wrinkleTypes = {
+        fine_lines: 0.4 + (Math.random() * 0.3),
+        deep_wrinkles: 0.1 + (Math.random() * 0.15),
+        crow_feet: 0.25 + (Math.random() * 0.2),
+        nasolabial_folds: 0.3 + (Math.random() * 0.25),
+        forehead_lines: 0.35 + (Math.random() * 0.25)
+      };
+      
+      // Add pigmentation analysis results
+      mockResult.pigmentationTypes = {
+        melasma: 0.15 + (Math.random() * 0.2),
+        post_inflammatory: 0.3 + (Math.random() * 0.25),
+        sun_spots: 0.4 + (Math.random() * 0.3),
+        freckles: 0.35 + (Math.random() * 0.25),
+        age_spots: 0.2 + (Math.random() * 0.15)
+      };
+      
+      // Add skin texture analysis results
+      mockResult.skinTextureTypes = {
+        rough: 0.3 + (Math.random() * 0.25),
+        smooth: 0.4 + (Math.random() * 0.25),
+        uneven: 0.35 + (Math.random() * 0.25),
+        bumpy: 0.2 + (Math.random() * 0.2),
+        scaly: 0.15 + (Math.random() * 0.15),
+        dehydrated: 0.25 + (Math.random() * 0.25)
+      };
+      
+      // Add pore analysis results
+      mockResult.poreTypes = {
+        enlarged: 0.4 + (Math.random() * 0.3),
+        clogged: 0.35 + (Math.random() * 0.25),
+        normal: 0.2 + (Math.random() * 0.15),
+        minimal: 0.05 + (Math.random() * 0.1)
       };
       
       // Add YOLO model results - object detection 
@@ -157,6 +246,21 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
           label: 'hyperpigmentation',
           confidence: 0.72 + (Math.random() * 0.15),
           position: { x: 300, y: 180, width: 30, height: 20 }
+        },
+        {
+          label: 'wrinkle',
+          confidence: 0.68 + (Math.random() * 0.15),
+          position: { x: 150, y: 60, width: 40, height: 5 }
+        },
+        {
+          label: 'dry_patch',
+          confidence: 0.77 + (Math.random() * 0.15),
+          position: { x: 100, y: 130, width: 35, height: 25 }
+        },
+        {
+          label: 'enlarged_pore',
+          confidence: 0.83 + (Math.random() * 0.1),
+          position: { x: 220, y: 170, width: 8, height: 8 }
         }
       ];
       
@@ -204,11 +308,99 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
         }
       }
       
+      // Update wrinkle recommendations if needed
+      let primaryWrinkleType = "";
+      maxConfidence = 0;
+      
+      if (mockResult.wrinkleTypes) {
+        for (const [type, confidence] of Object.entries(mockResult.wrinkleTypes)) {
+          if (confidence > maxConfidence) {
+            maxConfidence = confidence;
+            primaryWrinkleType = type;
+          }
+        }
+        
+        // Find or add wrinkle condition
+        const wrinkleCondition = mockResult.conditions.find(c => c.condition === 'Fine Lines');
+        if (wrinkleCondition && primaryWrinkleType) {
+          // Update condition name based on primary type
+          if (primaryWrinkleType === 'deep_wrinkles') {
+            wrinkleCondition.condition = 'Deep Wrinkles';
+            wrinkleCondition.recommendations = [
+              'Consider professional treatments like microneedling or laser',
+              'Use high-concentration retinoids (consult a dermatologist)',
+              'Add peptide serums to support collagen production',
+              'Ensure you're using a high SPF sunscreen daily'
+            ];
+          } else if (primaryWrinkleType === 'crow_feet') {
+            wrinkleCondition.condition = 'Crow\'s Feet';
+            wrinkleCondition.recommendations = [
+              'Apply eye-specific products with peptides and retinol',
+              'Consider using eye patches with hyaluronic acid',
+              'Always wear sunglasses outdoors',
+              'Stay hydrated and use a humidifier if in dry environments'
+            ];
+          } else if (primaryWrinkleType === 'nasolabial_folds') {
+            wrinkleCondition.condition = 'Nasolabial Folds';
+            wrinkleCondition.recommendations = [
+              'Use targeted peptide treatments in this area',
+              'Consider facial massage techniques to improve circulation',
+              'Look into professional dermal fillers (consult a dermatologist)',
+              'Use products with collagen-stimulating ingredients'
+            ];
+          }
+        }
+      }
+      
+      // Update pigmentation recommendations
+      let primaryPigmentType = "";
+      maxConfidence = 0;
+      
+      if (mockResult.pigmentationTypes) {
+        for (const [type, confidence] of Object.entries(mockResult.pigmentationTypes)) {
+          if (confidence > maxConfidence) {
+            maxConfidence = confidence;
+            primaryPigmentType = type;
+          }
+        }
+        
+        // Find pigmentation condition
+        const pigmentCondition = mockResult.conditions.find(c => c.condition === 'Hyperpigmentation');
+        if (pigmentCondition && primaryPigmentType) {
+          // Update condition name and recommendations based on primary type
+          if (primaryPigmentType === 'melasma') {
+            pigmentCondition.condition = 'Hyperpigmentation (Melasma)';
+            pigmentCondition.recommendations = [
+              'Use high SPF sunscreen with iron oxide to block visible light',
+              'Try tranexamic acid products which are effective for melasma',
+              'Consider professional treatments like chemical peels',
+              'Avoid heat exposure which can worsen melasma'
+            ];
+          } else if (primaryPigmentType === 'post_inflammatory') {
+            pigmentCondition.condition = 'Post-Inflammatory Hyperpigmentation';
+            pigmentCondition.recommendations = [
+              'Use products with niacinamide to reduce inflammation',
+              'Try alpha arbutin to inhibit tyrosinase activity',
+              'Be patient - PIH requires consistent treatment over time',
+              'Absolutely avoid picking at acne or irritation'
+            ];
+          } else if (primaryPigmentType === 'sun_spots') {
+            pigmentCondition.condition = 'Sun Spots';
+            pigmentCondition.recommendations = [
+              'Use products with vitamin C to brighten and provide antioxidant protection',
+              'Consider exfoliating with AHAs like glycolic acid',
+              'Look into professional treatments like IPL for stubborn spots',
+              'Reapply sunscreen every 2 hours when outdoors'
+            ];
+          }
+        }
+      }
+      
       toast.success('Advanced analysis complete', {
-        description: 'Enhanced skin analysis with CNN and YOLO models applied successfully'
+        description: 'Enhanced skin analysis with multiple advanced models applied successfully'
       });
     } catch (error) {
-      console.log('Advanced models could not be loaded in time, using basic analysis only');
+      console.log('Some advanced models could not be loaded in time, using partial advanced analysis');
     }
     
     console.log('Analysis complete:', mockResult);

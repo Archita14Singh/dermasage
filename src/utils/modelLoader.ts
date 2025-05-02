@@ -4,10 +4,19 @@ import { toast } from 'sonner';
 // Model state management
 let modelInitialized = false;
 let loadingPromise: Promise<boolean> | null = null;
-let modelVersion = 'v1.0'; // Track model version for potential updates
+let modelVersion = 'v2.0'; // Updated model version
 
-// For the prototype, we'll simulate different model types being loaded
-type ModelType = 'general' | 'acne-classification' | 'yolo-detection' | 'cnn-classification';
+// Extended model types for more comprehensive analysis
+type ModelType = 
+  | 'general' 
+  | 'acne-classification' 
+  | 'yolo-detection' 
+  | 'cnn-classification'
+  | 'wrinkle-detection'
+  | 'pigmentation-analysis'
+  | 'skin-texture-analysis'
+  | 'pore-analysis';
+
 let loadedModelTypes: ModelType[] = [];
 
 export const loadSkinAnalysisModel = async (modelType: ModelType = 'general') => {
@@ -29,9 +38,14 @@ export const loadSkinAnalysisModel = async (modelType: ModelType = 'general') =>
   loadingPromise = new Promise<boolean>((resolve, reject) => {
     try {
       // Determine loading time based on model type (simulating different complexities)
-      const loadingTime = modelType === 'general' ? 1000 : 
-                         modelType === 'yolo-detection' ? 2000 :
-                         modelType === 'cnn-classification' ? 2500 : 1500;
+      const loadingTime = 
+        modelType === 'general' ? 1000 : 
+        modelType === 'yolo-detection' ? 2000 :
+        modelType === 'cnn-classification' ? 2500 : 
+        modelType === 'wrinkle-detection' ? 1800 :
+        modelType === 'pigmentation-analysis' ? 2200 :
+        modelType === 'skin-texture-analysis' ? 1700 :
+        modelType === 'pore-analysis' ? 1600 : 1500;
                          
       // Show toast for more complex models
       if (modelType !== 'general') {
@@ -76,12 +90,16 @@ export const loadSkinAnalysisModel = async (modelType: ModelType = 'general') =>
   return loadingPromise;
 };
 
-// Load multiple model types at once
+// Load multiple model types at once with expanded model types
 export const loadAllModels = async () => {
   try {
     await loadSkinAnalysisModel('general');
     await loadSkinAnalysisModel('yolo-detection');
     await loadSkinAnalysisModel('cnn-classification');
+    await loadSkinAnalysisModel('wrinkle-detection');
+    await loadSkinAnalysisModel('pigmentation-analysis');
+    await loadSkinAnalysisModel('skin-texture-analysis');
+    await loadSkinAnalysisModel('pore-analysis');
     return true;
   } catch (error) {
     console.error('Error loading all models:', error);
