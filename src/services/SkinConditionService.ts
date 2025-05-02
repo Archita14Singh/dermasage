@@ -1,7 +1,10 @@
-
 import { toast } from 'sonner';
 import { loadSkinAnalysisModel, loadAllModels } from '@/utils/modelLoader';
-import { analyzeSkinCondition, AnalysisResult, AcneType } from '@/utils/skinAnalysisUtils';
+import { 
+  analyzeSkinCondition, 
+  AnalysisResult, 
+  AcneType 
+} from '@/utils/skinAnalysis';
 
 type ClientProfile = {
   name: string;

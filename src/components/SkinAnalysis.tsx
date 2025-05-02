@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { loadSkinAnalysisModel } from '@/utils/modelLoader';
-import { analyzeSkinCondition } from '@/utils/skinAnalysisUtils';
+import { analyzeSkinCondition } from '@/utils/skinAnalysis';
 import AnalysisResult from './AnalysisResult';
 import ImageUploader from './ImageUploader';
 import LoadingOverlay from './LoadingOverlay';
