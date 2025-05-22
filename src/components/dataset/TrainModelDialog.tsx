@@ -17,14 +17,14 @@ import { modelTrainer } from '@/utils/skinAnalysis/modelTrainer';
 import { Dataset } from '@/types/dataset';
 
 interface TrainModelDialogProps {
-  open: boolean;
+  isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   dataset: Dataset;
   onModelTrained: () => void;
 }
 
 const TrainModelDialog: React.FC<TrainModelDialogProps> = ({ 
-  open, 
+  isOpen, 
   onOpenChange,
   dataset,
   onModelTrained
@@ -50,7 +50,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
         batchSize,
         validationSplit,
         augmentation,
-        onProgress: (progressData: any) => {
+        onProgress: (progressData) => {
           setProgress(progressData.progress * 100);
           setStatus(progressData.status);
         }
@@ -74,7 +74,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
   };
   
   return (
-    <Dialog open={open} onOpenChange={(open) => !isTraining && onOpenChange(open)}>
+    <Dialog open={isOpen} onOpenChange={(open) => !isTraining && onOpenChange(open)}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Train AI Model</DialogTitle>

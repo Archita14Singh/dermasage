@@ -1,4 +1,6 @@
 
+import { analyzeSkinCondition } from './analyzer';
+
 type TrainingOptions = {
   epochs: number;
   learningRate: number;
@@ -53,10 +55,54 @@ export const modelTrainer = {
           
           // Simulate training completion
           setTimeout(() => {
+            // Save the trained model info to localStorage
+            const trainedModels = JSON.parse(localStorage.getItem('skinwise_models') || '[]');
+            trainedModels.push({
+              datasetId,
+              trainedAt: new Date().toISOString(),
+              epochs: options.epochs,
+              augmentation: options.augmentation
+            });
+            localStorage.setItem('skinwise_models', JSON.stringify(trainedModels));
+            
             resolve(true);
           }, 1000);
         }
       }, 500);
     });
+  },
+  
+  /**
+   * Analyze skin using a previously trained model
+   * @param imageData Base64 image data to analyze
+   * @param datasetId ID of the dataset associated with the trained model
+   * @returns Analysis results
+   */
+  analyzeWithTrainedModel: async (imageData: string, datasetId: string): Promise<any> => {
+    console.log(`Analyzing with trained model for dataset ${datasetId}`);
+    
+    // Check if model exists
+    const trainedModels = JSON.parse(localStorage.getItem('skinwise_models') || '[]');
+    const model = trainedModels.find((m: any) => m.datasetId === datasetId);
+    
+    if (!model) {
+      console.error('Model not found for dataset:', datasetId);
+      throw new Error('Trained model not found');
+    }
+    
+    // For demonstration purposes, we'll use the standard analysis but add custom fields
+    // In a real implementation, this would use the actual trained model for inference
+    const baseResults = await analyzeSkinCondition(imageData);
+    
+    // Add custom fields to indicate this was analyzed with a custom model
+    return {
+      ...baseResults,
+      usedCustomModel: true,
+      customModelInfo: {
+        datasetId,
+        trainedAt: model.trainedAt,
+        epochs: model.epochs
+      }
+    };
   }
 };

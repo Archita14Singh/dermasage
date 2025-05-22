@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card
@@ -119,7 +118,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         dataset={dataset}
         onEditClick={() => setIsEditDialogOpen(true)}
         onAddImageClick={handleOpenAddImageDialog}
-        onTrainModelClick={handleTrainModel} // Add this prop
+        onTrainModelClick={handleTrainModel}
       />
       
       <DatasetContent
@@ -171,7 +170,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       
       {/* Add Train Model Dialog */}
       <TrainModelDialog
-        open={isTrainModelDialogOpen}
+        isOpen={isTrainModelDialogOpen}
         onOpenChange={setIsTrainModelDialogOpen}
         dataset={dataset}
         onModelTrained={onDatasetUpdated}
