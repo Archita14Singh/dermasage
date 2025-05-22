@@ -42,7 +42,7 @@ const enhanceAcneRecommendations = (results: AnalysisResult): void => {
   if (!results.acneTypes) return;
   
   for (const [type, confidence] of Object.entries(results.acneTypes)) {
-    if (confidence > maxConfidence) {
+    if (confidence !== undefined && confidence > maxConfidence) {
       maxConfidence = confidence;
       primaryAcneType = type;
     }
@@ -89,7 +89,7 @@ const enhanceWrinkleRecommendations = (results: AnalysisResult): void => {
   if (!results.wrinkleTypes) return;
   
   for (const [type, confidence] of Object.entries(results.wrinkleTypes)) {
-    if (confidence > maxConfidence) {
+    if (confidence !== undefined && confidence > maxConfidence) {
       maxConfidence = confidence;
       primaryWrinkleType = type;
     }
@@ -137,7 +137,7 @@ const enhancePigmentationRecommendations = (results: AnalysisResult): void => {
   if (!results.pigmentationTypes) return;
   
   for (const [type, confidence] of Object.entries(results.pigmentationTypes)) {
-    if (confidence > maxConfidence) {
+    if (confidence !== undefined && confidence > maxConfidence) {
       maxConfidence = confidence;
       primaryPigmentType = type;
     }

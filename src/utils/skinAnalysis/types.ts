@@ -5,9 +5,11 @@ export type ConditionSeverity = 'low' | 'mild' | 'moderate' | 'high';
 
 export type AcneType = 'hormonal' | 'cystic' | 'comedonal' | 'fungal';
 
+export type ImpactLevel = 'high' | 'medium' | 'low';
+
 export interface EnvironmentalFactor {
   factor: string;
-  impact: 'high' | 'medium' | 'low';
+  impact: ImpactLevel;
   recommendations: string[];
 }
 
@@ -24,6 +26,18 @@ export interface DetectedObject {
   count?: number;
 }
 
+export interface WrinkleTypes {
+  deep_wrinkles?: number;
+  crow_feet?: number;
+  nasolabial_folds?: number;
+}
+
+export interface PigmentationTypes {
+  melasma?: number;
+  post_inflammatory?: number;
+  sun_spots?: number;
+}
+
 export interface AnalysisResult {
   skinType: SkinType;
   overall: string;
@@ -33,5 +47,7 @@ export interface AnalysisResult {
   acneTypes?: {
     [key in AcneType]?: number;
   };
+  wrinkleTypes?: WrinkleTypes;
+  pigmentationTypes?: PigmentationTypes;
   environmentalFactors?: EnvironmentalFactor[];
 }

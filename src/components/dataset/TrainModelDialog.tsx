@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -45,7 +46,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
     setStatus('Preparing...');
     
     try {
-      const success = await modelTrainer.trainModel(dataset, {
+      const success = await modelTrainer.trainModel(dataset.id, {
         epochs,
         learningRate,
         batchSize,

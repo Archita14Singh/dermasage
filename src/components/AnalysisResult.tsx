@@ -21,9 +21,9 @@ const AnalysisResult: React.FC<AnalysisResultProps> = ({ results }) => {
   const getSeverityColor = (severity: string) => {
     switch (severity) {
       case 'high': return 'destructive';
-      case 'moderate': return 'amber';
-      case 'mild': return 'yellow';
-      case 'low': return 'green';
+      case 'moderate': return 'secondary';
+      case 'mild': return 'outline';
+      case 'low': return 'outline';
       default: return 'secondary';
     }
   };

@@ -1,7 +1,7 @@
 
 import { toast } from 'sonner';
 import { loadSkinAnalysisModel } from '../modelLoader';
-import { AnalysisResult } from './types';
+import { AnalysisResult, EnvironmentalFactor, ImpactLevel } from './types';
 import { generateMockSkinConditions, generateAdvancedModelData } from './mockDataGenerator';
 import { enhanceAnalysisResults } from './resultEnhancer';
 import { preprocessImage } from './imageProcessor';
@@ -74,11 +74,11 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
  * Generates environmental factors analysis based on image metadata
  * In a real app, this would use actual environmental data
  */
-function generateEnvironmentalFactorsAnalysis() {
+function generateEnvironmentalFactorsAnalysis(): EnvironmentalFactor[] {
   return [
     {
       factor: 'Humidity',
-      impact: Math.random() > 0.6 ? 'high' : 'medium',
+      impact: (Math.random() > 0.6 ? 'high' : 'medium') as ImpactLevel,
       recommendations: [
         'Use a humidifier during dry months',
         'Adjust your moisturizer based on seasonal humidity changes',
@@ -87,7 +87,7 @@ function generateEnvironmentalFactorsAnalysis() {
     },
     {
       factor: 'UV Exposure',
-      impact: Math.random() > 0.4 ? 'high' : 'medium',
+      impact: (Math.random() > 0.4 ? 'high' : 'medium') as ImpactLevel,
       recommendations: [
         'Apply broad-spectrum SPF 30+ daily',
         'Reapply sunscreen every 2 hours when outdoors',
@@ -96,7 +96,7 @@ function generateEnvironmentalFactorsAnalysis() {
     },
     {
       factor: 'Air Pollution',
-      impact: Math.random() > 0.5 ? 'medium' : 'low',
+      impact: (Math.random() > 0.5 ? 'medium' : 'low') as ImpactLevel,
       recommendations: [
         'Double cleanse in the evening to remove pollutants',
         'Use antioxidant serums to protect from free radical damage',
