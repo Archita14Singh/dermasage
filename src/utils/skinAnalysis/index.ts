@@ -5,3 +5,4 @@ export * from './analyzer';
 export * from './imageProcessor';
 export * from './mockDataGenerator';
 export * from './resultEnhancer';
+export * from './modelTrainer';

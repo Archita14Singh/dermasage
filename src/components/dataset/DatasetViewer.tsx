@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { 
   Card
@@ -11,6 +12,7 @@ import AddImageDialog from './AddImageDialog';
 import ImageDetailsDialog from './ImageDetailsDialog';
 import DatasetHeader from './DatasetHeader';
 import DatasetContent from './DatasetContent';
+import TrainModelDialog from './TrainModelDialog'; // Add this import
 import { useImageForm } from '@/hooks/useImageForm';
 
 interface DatasetViewerProps {
@@ -24,6 +26,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
 }) => {
   const [isAddImageDialogOpen, setIsAddImageDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isTrainModelDialogOpen, setIsTrainModelDialogOpen] = useState(false); // Add this state
   const [editedName, setEditedName] = useState(dataset.name);
   const [editedDescription, setEditedDescription] = useState(dataset.description);
   const [selectedImage, setSelectedImage] = useState<DatasetImage | null>(null);
@@ -106,12 +109,17 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     setIsAddImageDialogOpen(true);
   };
   
+  const handleTrainModel = () => {
+    setIsTrainModelDialogOpen(true);
+  };
+  
   return (
     <Card className="h-full flex flex-col glass-card">
       <DatasetHeader
         dataset={dataset}
         onEditClick={() => setIsEditDialogOpen(true)}
         onAddImageClick={handleOpenAddImageDialog}
+        onTrainModelClick={handleTrainModel} // Add this prop
       />
       
       <DatasetContent
@@ -159,6 +167,14 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         selectedImage={selectedImage}
         onOpenChange={(open) => !open && setSelectedImage(null)}
         onDelete={handleDeleteImage}
+      />
+      
+      {/* Add Train Model Dialog */}
+      <TrainModelDialog
+        open={isTrainModelDialogOpen}
+        onOpenChange={setIsTrainModelDialogOpen}
+        dataset={dataset}
+        onModelTrained={onDatasetUpdated}
       />
     </Card>
   );
