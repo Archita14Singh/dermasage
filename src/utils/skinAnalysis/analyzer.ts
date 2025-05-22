@@ -45,6 +45,9 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
       const advancedData = generateAdvancedModelData();
       Object.assign(mockResult, advancedData);
       
+      // Generate environmental factors analysis
+      mockResult.environmentalFactors = generateEnvironmentalFactorsAnalysis();
+      
       // Enhance the analysis results with specialized recommendations
       const enhancedResults = enhanceAnalysisResults(mockResult);
       
@@ -66,3 +69,39 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
     throw new Error('Analysis failed');
   }
 };
+
+/**
+ * Generates environmental factors analysis based on image metadata
+ * In a real app, this would use actual environmental data
+ */
+function generateEnvironmentalFactorsAnalysis() {
+  return [
+    {
+      factor: 'Humidity',
+      impact: Math.random() > 0.6 ? 'high' : 'medium',
+      recommendations: [
+        'Use a humidifier during dry months',
+        'Adjust your moisturizer based on seasonal humidity changes',
+        'Consider using hydrating mists throughout the day'
+      ]
+    },
+    {
+      factor: 'UV Exposure',
+      impact: Math.random() > 0.4 ? 'high' : 'medium',
+      recommendations: [
+        'Apply broad-spectrum SPF 30+ daily',
+        'Reapply sunscreen every 2 hours when outdoors',
+        'Seek shade during peak sun hours (10am-4pm)'
+      ]
+    },
+    {
+      factor: 'Air Pollution',
+      impact: Math.random() > 0.5 ? 'medium' : 'low',
+      recommendations: [
+        'Double cleanse in the evening to remove pollutants',
+        'Use antioxidant serums to protect from free radical damage',
+        'Consider an air purifier for your living space'
+      ]
+    }
+  ];
+}

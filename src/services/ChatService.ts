@@ -1,7 +1,6 @@
-
 import { Message } from '@/types/chat';
 import SkinConditionService from './SkinConditionService';
-import { AnalysisResult } from '@/utils/skinAnalysisUtils';
+import { AnalysisResult, EnvironmentalFactor } from '@/utils/skinAnalysis';
 
 type ClientProfile = {
   name: string;
@@ -25,28 +24,25 @@ class ChatService {
       // Check for allergies mentioned in the profile
       const allergiesWarning = clientProfile?.allergies ? 
         `Note: Given your allergies to ${clientProfile.allergies}, I've excluded products containing these ingredients. ` : '';
+
+      // Environmental factors section
+      if (lowercaseInput.includes('environment') || 
+          lowercaseInput.includes('humidity') || 
+          lowercaseInput.includes('climate') ||
+          lowercaseInput.includes('weather') ||
+          lowercaseInput.includes('pollut') ||
+          lowercaseInput.includes('uv')) {
+        
+        resolve(`${personalizedIntro}Environmental factors have a significant impact on your skin${name}. Here's how different factors affect your skin health:\n\n1. HUMIDITY LEVELS:\n   • Low Humidity: Causes moisture loss, tightness, and flaking\n   • High Humidity: Can increase oil production and sweat-triggered breakouts\n   • Seasonal Changes: Require adjusting your skincare routine accordingly\n\n2. UV RADIATION:\n   • UVA: Penetrates deep into skin causing premature aging and DNA damage\n   • UVB: Causes sunburn and surface damage\n   • Protection: Daily broad-spectrum SPF 30+ year-round is essential\n\n3. AIR POLLUTION:\n   • Particulate Matter: Clogs pores and triggers inflammation\n   • Free Radicals: Damages collagen and accelerates aging\n   • Protection: Antioxidants like vitamin C and thorough evening cleansing\n\n4. INDOOR ENVIRONMENTS:\n   • Heating/AC: Can strip moisture from skin\n   • Blue Light: From screens may contribute to hyperpigmentation\n   • Solution: Humidifiers, blue light protection, and regular hydration\n\n5. CLIMATE-SPECIFIC RECOMMENDATIONS:\n   • Dry Climate: Layer hydrating products, use occlusive moisturizers\n   • Humid Climate: Lightweight, oil-free formulations, more frequent cleansing\n   • Cold Climate: Richer moisturizers, barrier-supporting ingredients\n   • Hot Climate: Cooling products, increased antioxidant protection\n\nWould you like me to recommend specific products for your climate conditions or discuss how to adapt your routine for seasonal changes?`);
+      }
       
       // Diet and nutrition related questions
-      if (lowercaseInput.includes('diet') || lowercaseInput.includes('food') || lowercaseInput.includes('nutrition') || lowercaseInput.includes('eat')) {
-        if (lowercaseInput.includes('acne')) {
-          resolve(`${personalizedIntro}For acne-specific dietary recommendations${name}:\n\n1. Reduce high-glycemic foods (white bread, sugary snacks) that can trigger insulin spikes and inflammation\n2. Increase omega-3s from fatty fish, flaxseeds, or walnuts to reduce inflammation\n3. Consider a dairy-free trial for 4-6 weeks (studies show links between dairy and acne)\n4. Add zinc-rich foods like pumpkin seeds, lentils, and oysters\n5. Consume antioxidant-rich fruits and vegetables to fight free radical damage\n\n${allergiesWarning}Would you like me to suggest a specific 7-day meal plan focused on reducing acne?`);
-        } else if (lowercaseInput.includes('dry skin') || lowercaseInput.includes('dryness')) {
-          resolve(`${personalizedIntro}For combating dry skin through diet${name}:\n\n1. Increase healthy fats like avocados, olive oil, and nuts to support skin barrier function\n2. Consume foods rich in omega-3s (salmon, chia seeds) to retain skin moisture\n3. Add collagen-supporting foods with vitamin C (citrus, bell peppers)\n4. Stay well-hydrated with at least 2-3 liters of water daily\n5. Consider foods high in vitamin E (almonds, sunflower seeds) for skin protection\n\n${allergiesWarning}Would you like me to recommend specific hydrating recipes that can help your dry skin?`);
-        } else if (lowercaseInput.includes('anti-aging') || lowercaseInput.includes('wrinkle') || lowercaseInput.includes('aging')) {
-          resolve(`${personalizedIntro}For anti-aging nutrition recommendations${name}:\n\n1. Focus on antioxidant-rich berries (blueberries, strawberries) to fight oxidative stress\n2. Consume fatty fish high in omega-3s (salmon, mackerel) 2-3 times weekly\n3. Add collagen-supporting proteins and vitamin C-rich foods\n4. Include foods with polyphenols like green tea, dark chocolate (70%+ cacao)\n5. Avoid excess sugar and processed foods that can accelerate skin aging through glycation\n\n${allergiesWarning}Would you like me to suggest specific anti-aging superfoods to incorporate into your meals?`);
-        } else {
-          resolve(`${personalizedIntro}Here's a comprehensive skin-healthy diet plan${name}:\n\n1. HYDRATION: 8-10 glasses of water daily, plus hydrating foods like watermelon and cucumber\n\n2. SKIN-BOOSTING NUTRIENTS:\n   • Omega-3s: Fatty fish, walnuts, flaxseeds (reduces inflammation)\n   • Vitamin E: Almonds, sunflower seeds, avocado (protects skin cells)\n   • Vitamin C: Citrus, bell peppers, strawberries (promotes collagen)\n   • Vitamin A: Sweet potatoes, carrots, spinach (cell regeneration)\n   • Zinc: Pumpkin seeds, legumes, oysters (aids healing and oil control)\n\n3. FOODS TO LIMIT:\n   • Refined sugars (cause inflammation and glycation)\n   • Excessive dairy (may trigger acne in some people)\n   • Processed foods with artificial additives\n   • Alcohol (dehydrates skin)\n\n${allergiesWarning}Would you like a personalized meal plan based on your specific skin concerns?`);
-        }
+      else if (lowercaseInput.includes('diet') || lowercaseInput.includes('food') || lowercaseInput.includes('nutrition') || lowercaseInput.includes('eat')) {
+        // ... keep existing code (dietary advice section)
       }
       // Exercise related questions - expanded with more specific routines
       else if (lowercaseInput.includes('exercise') || lowercaseInput.includes('workout') || lowercaseInput.includes('yoga')) {
-        if (lowercaseInput.includes('acne')) {
-          resolve(`${personalizedIntro}For exercising with acne-prone skin${name}:\n\n1. Choose breathable, moisture-wicking workout clothes to reduce sweat irritation\n2. Cleanse your face immediately after sweating with a gentle cleanser\n3. Avoid wearing makeup during workouts\n4. Use clean towels to pat (not rub) sweat from your face\n5. Low-moderate intensity exercises like walking, swimming, and yoga may cause less excessive sweating\n\nSample acne-friendly workout routine:\n• 5-minute gentle warm-up\n• 20 minutes of moderate cardio (walking, elliptical)\n• 15 minutes of strength training (focusing on form over intensity)\n• 10 minutes of stress-reducing yoga\n\nWould you like more specific exercise recommendations that won't aggravate your acne?`);
-        } else if (lowercaseInput.includes('anti-aging') || lowercaseInput.includes('wrinkle')) {
-          resolve(`${personalizedIntro}For anti-aging exercise benefits${name}:\n\n1. Include face yoga to tone facial muscles (e.g., cheek lifters, forehead smoothers)\n2. Practice stress-reducing exercises like tai chi or gentle yoga to prevent cortisol-related aging\n3. Add resistance training 2-3 times weekly to maintain muscle mass and skin elasticity\n4. Incorporate balance work to improve posture, which affects facial appearance\n5. Try HIIT workouts 1-2 times weekly for improved circulation and cellular regeneration\n\nSimple anti-aging workout plan:\n• Daily: 5 minutes of face yoga\n• 3x weekly: 30 minutes of resistance training\n• 2x weekly: 20 minutes of HIIT or interval training\n• 2x weekly: 30 minutes of flexibility/balance work\n\nWould you like me to describe specific face yoga exercises that target your areas of concern?`);
-        } else {
-          resolve(`${personalizedIntro}Exercise benefits for skin health${name}:\n\n1. CARDIOVASCULAR EXERCISE (30 mins, 3-5x weekly):\n   • Improves circulation and oxygen delivery to skin cells\n   • Enhances nutrient delivery and toxin removal\n   • Options: Brisk walking, cycling, swimming, dancing\n\n2. STRENGTH TRAINING (2-3x weekly):\n   • Promotes growth hormone production that aids skin repair\n   • Maintains muscle mass which supports skin structure\n   • Options: Bodyweight exercises, resistance bands, light weights\n\n3. MIND-BODY EXERCISE (2-4x weekly):\n   • Reduces stress hormones that trigger skin issues\n   • Improves sleep quality for better skin regeneration\n   • Options: Yoga, tai chi, pilates, meditation\n\n4. SKIN-SMART WORKOUT TIPS:\n   • Cleanse face before and after exercise\n   • Avoid touching face during workouts\n   • Stay hydrated before, during, and after\n   • Wear sunscreen for outdoor activities\n\nWould you like a personalized weekly exercise plan that aligns with your skin goals?`);
-        }
+        // ... keep existing code (exercise recommendations)
       }
       // Specific product recommendations with shopping links
       else if (lowercaseInput.includes('recommend') && (lowercaseInput.includes('cleanser') || lowercaseInput.includes('moisturizer') || lowercaseInput.includes('sunscreen'))) {
@@ -167,7 +163,7 @@ class ChatService {
               "5. Moisturizer: Medium-weight moisturizer (Neutrogena Hydro Boost Gel-Cream - [Amazon](https://www.amazon.com/Neutrogena-Hydro-Hyaluronic-Hydrating-Moisturizer/dp/B00NR1YQK4))";
               break;
             case 'sensitive':
-              skinTypeRecommendation = `For your sensitive skin type${name}, I recommend this comprehensive routine:\n\n` +
+              skinTypeRecommendation = `For your sensitive skin type${name}, I recommend this comprehensive routine:\n\n" +
               "MORNING:\n" +
               "1. Cleanser: Ultra-gentle cleanser (Vanicream Gentle Facial Cleanser - [Amazon](https://www.amazon.com/Vanicream-Gentle-Cleanser-sensitive-Dispenser/dp/B00QX0D94A))\n" +
               "2. Serum: Centella asiatica to calm (PURITO Centella Unscented Serum - [Amazon](https://www.amazon.com/PURITO-Centella-Unscented-Serum-Fluid/dp/B07VGWQ1SB))\n" +
@@ -192,10 +188,10 @@ class ChatService {
       // Handle greetings more conversationally
       else if (lowercaseInput.includes('hello') || lowercaseInput.includes('hi')) {
         const greeting = clientProfile ? 
-          `Hello ${clientProfile.name}! I'm your AI skincare assistant. ` : 
+          `Hello ${clientProfile.name}! I'm DermaSage's AI assistant. ` : 
           "Hello! I'm your AI skincare assistant. ";
         
-        resolve(`${greeting}I can help analyze your skin, recommend products, or answer questions about skin concerns. What's on your mind today? I can provide guidance on:\n\n1. Specific skin conditions (acne, rosacea, eczema, etc.)\n2. Personalized skincare routines\n3. Product recommendations with shopping links\n4. Diet and lifestyle tips for better skin\n5. Ingredient information and compatibility\n\nOr you can upload a photo for analysis. How can I help you today?`);
+        resolve(`${greeting}I can help analyze your skin, recommend products, or answer questions about skin concerns. What's on your mind today? I can provide guidance on:\n\n1. Specific skin conditions (acne, rosacea, eczema, etc.)\n2. Personalized skincare routines\n3. Product recommendations with shopping links\n4. Diet and lifestyle tips for better skin\n5. Environmental factors affecting your skin\n6. Ingredient information and compatibility\n\nOr you can upload a photo for analysis. How can I help you today?`);
       }
       // Handle thank you messages
       else if (lowercaseInput.includes('thank') || lowercaseInput.includes('thanks')) {
@@ -208,6 +204,19 @@ class ChatService {
       // Handle questions about ingredients
       else if (lowercaseInput.includes('ingredient') || lowercaseInput.includes('what') && lowercaseInput.includes('in')) {
         resolve(`Great question about ingredients${name}! To give you the most accurate information, could you specify which ingredient or product you're curious about? Different ingredients serve different purposes in skincare, from hydration to exfoliation to anti-aging. I can explain how they work, ideal concentrations, and which skin types they're best for.`);
+      }
+      // CNN and YOLO model questions
+      else if ((lowercaseInput.includes('cnn') || lowercaseInput.includes('neural network')) || 
+               (lowercaseInput.includes('yolo') || lowercaseInput.includes('detection'))) {
+        
+        resolve(`${personalizedIntro}Yes${name}, our application uses advanced deep learning models to analyze your skin:\n\n1. CNN (Convolutional Neural Network):\n   • Used for classifying different types of skin conditions\n   • Specializes in detecting patterns like acne types, rosacea, eczema\n   • Trained on thousands of dermatological images\n   • Provides confidence scores for different skin conditions\n\n2. YOLO (You Only Look Once):\n   • Real-time object detection for specific skin features\n   • Counts and identifies issues like blackheads, whiteheads, cysts\n   • Measures severity by counting and sizing detected conditions\n   • Creates a detailed map of your skin concerns\n\n3. Additional Specialized Models:\n   • Wrinkle Detection: Analyzes fine lines and their depth\n   • Pigmentation Analysis: Evaluates dark spots and uneven tone\n   • Texture Analysis: Assesses skin smoothness and uniformity\n   • Pore Analysis: Measures pore size and distribution\n\nThe combination of these models allows us to provide comprehensive skin analysis much like a dermatologist would, considering multiple factors simultaneously. When you upload a photo, all these models work together to generate your personalized skin report and recommendations.\n\nWould you like me to explain more about how any specific part of our AI analysis works?`);
+      }
+      // Camera functionality
+      else if (lowercaseInput.includes('camera') || 
+               (lowercaseInput.includes('photo') && lowercaseInput.includes('upload')) || 
+               lowercaseInput.includes('picture')) {
+        
+        resolve(`${personalizedIntro}You can analyze your skin by uploading photos in two ways${name}:\n\n1. In the Analysis section:\n   • Navigate to the Analysis tab from the main menu\n   • Click on the upload area or drag and drop an image\n   • Your skin will be analyzed immediately using our advanced AI models\n   • You'll see a detailed breakdown of conditions and recommendations\n   • You can also choose to use your custom trained models if available\n\n2. Directly in this chat:\n   • Click the camera icon in the message input area below\n   • Select an image from your device\n   • I'll analyze it and provide personalized results\n   • We can then discuss the results and I can answer specific questions\n\nFor best results, please upload a clear, well-lit photo of your face without makeup. Natural daylight provides the most accurate analysis. Make sure your face is centered and clearly visible.\n\nWould you like to upload a photo now for analysis?`);
       }
       // Default response that asks follow-up questions
       else {

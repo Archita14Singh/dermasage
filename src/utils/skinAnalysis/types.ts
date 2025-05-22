@@ -1,39 +1,37 @@
 
-// Types for skin analysis results and conditions
+export type SkinType = 'dry' | 'oily' | 'combination' | 'normal' | 'sensitive';
 
-export type SkinCondition = {
-  condition: string;
-  confidence: number;
-  severity: 'low' | 'moderate' | 'high';
+export type ConditionSeverity = 'low' | 'mild' | 'moderate' | 'high';
+
+export type AcneType = 'hormonal' | 'cystic' | 'comedonal' | 'fungal';
+
+export interface EnvironmentalFactor {
+  factor: string;
+  impact: 'high' | 'medium' | 'low';
   recommendations: string[];
-};
+}
 
-export type AcneType = 'papules' | 'pustules' | 'nodular' | 'cystic' | 'comedonal' | 'hormonal' | 'fungal';
+export interface SkinCondition {
+  condition: string;
+  severity: ConditionSeverity;
+  confidence: number;
+  recommendations: string[];
+}
 
-export type WrinkleType = 'fine_lines' | 'deep_wrinkles' | 'crow_feet' | 'nasolabial_folds' | 'forehead_lines';
-
-export type PigmentationType = 'melasma' | 'post_inflammatory' | 'sun_spots' | 'freckles' | 'age_spots';
-
-export type SkinTextureType = 'rough' | 'smooth' | 'uneven' | 'bumpy' | 'scaly' | 'dehydrated';
-
-export type PoreType = 'enlarged' | 'clogged' | 'normal' | 'minimal';
-
-export type DetectedObject = {
+export interface DetectedObject {
   label: string;
   confidence: number;
-  position: { x: number, y: number, width: number, height: number };
-};
+  count?: number;
+}
 
-export type AnalysisResult = {
-  conditions: SkinCondition[];
+export interface AnalysisResult {
+  skinType: SkinType;
   overall: string;
-  skinType: string;
-  // Advanced model outputs
-  acneTypes?: Record<AcneType, number>; // From CNN classification
-  wrinkleTypes?: Record<WrinkleType, number>; // From wrinkle detection model
-  pigmentationTypes?: Record<PigmentationType, number>; // From pigmentation analysis
-  skinTextureTypes?: Record<SkinTextureType, number>; // From texture analysis
-  poreTypes?: Record<PoreType, number>; // From pore analysis
-  detectedObjects?: DetectedObject[]; // From YOLO detection
+  conditions: SkinCondition[];
   usedAdvancedModels?: boolean;
-};
+  detectedObjects?: DetectedObject[];
+  acneTypes?: {
+    [key in AcneType]?: number;
+  };
+  environmentalFactors?: EnvironmentalFactor[];
+}

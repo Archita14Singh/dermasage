@@ -1,208 +1,302 @@
 
-import { 
-  AnalysisResult, 
-  AcneType,
-  WrinkleType,
-  PigmentationType,
-  SkinTextureType,
-  PoreType,
-  DetectedObject
-} from './types';
+import { AnalysisResult, SkinCondition, SkinType, EnvironmentalFactor } from './types';
 
 /**
- * Generates mock data for skin analysis
+ * Generates mock skin condition analysis for prototype
  */
 export const generateMockSkinConditions = (): AnalysisResult => {
-  // Add some randomness for demo purposes
-  const randomFactor = Math.random() * 0.2;
-
-  return {
-    conditions: [
-      {
-        condition: 'Acne',
-        confidence: 0.75 + randomFactor,
-        severity: 'moderate',
-        recommendations: [
-          'Use a gentle cleanser with salicylic acid twice daily',
-          'Apply benzoyl peroxide spot treatment on affected areas',
-          'Avoid comedogenic (pore-clogging) products',
-          'Consider a retinoid product to help with cell turnover'
-        ]
-      },
+  const skinTypes: SkinType[] = ['dry', 'oily', 'combination', 'normal', 'sensitive'];
+  const randomIndex = Math.floor(Math.random() * skinTypes.length);
+  const skinType = skinTypes[randomIndex];
+  
+  // Define possible conditions for each skin type
+  const conditionsByType: Record<SkinType, SkinCondition[]> = {
+    dry: [
       {
         condition: 'Dryness',
-        confidence: 0.62 - randomFactor,
-        severity: 'moderate',
+        severity: 'high',
+        confidence: 0.92,
         recommendations: [
-          'Use a hydrating cleanser instead of soap-based products',
-          'Apply hyaluronic acid serum on damp skin',
-          'Use a moisturizer with ceramides to strengthen skin barrier',
-          'Consider adding facial oils in your nighttime routine'
-        ]
-      },
-      {
-        condition: 'Redness',
-        confidence: 0.55 + randomFactor,
-        severity: 'low',
-        recommendations: [
-          'Look for products with soothing ingredients like centella asiatica',
-          'Avoid hot water when washing your face',
-          'Consider azelaic acid to reduce inflammation',
-          'Use fragrance-free products to minimize irritation'
-        ]
-      },
-      {
-        condition: 'Oiliness',
-        confidence: 0.3 - randomFactor,
-        severity: 'low',
-        recommendations: [
-          'Use a gentle foaming cleanser',
-          'Consider niacinamide serum to regulate sebum production',
-          'Use lightweight, oil-free moisturizers',
-          'Try weekly clay masks to absorb excess oil'
-        ]
-      },
-      {
-        condition: 'Hyperpigmentation',
-        confidence: 0.4 + randomFactor,
-        severity: 'low',
-        recommendations: [
-          'Use vitamin C serum in the morning',
-          'Apply sunscreen with at least SPF 30 daily',
-          'Consider alpha arbutin or tranexamic acid products',
-          'Be patient - hyperpigmentation takes time to fade'
+          'Use a gentle, hydrating cleanser without sulfates',
+          'Apply hydrating serum with hyaluronic acid',
+          'Use an oil-based moisturizer to lock in hydration',
+          'Consider using a humidifier in your bedroom'
         ]
       },
       {
         condition: 'Fine Lines',
-        confidence: 0.35 + (Math.random() * 0.25),
-        severity: 'low',
+        severity: 'moderate',
+        confidence: 0.76,
         recommendations: [
-          'Incorporate retinol into your evening skincare routine',
-          'Use products with peptides to support collagen production',
-          'Add a hydrating hyaluronic acid serum to plump skin',
-          'Ensure you are using sufficient SPF daily to prevent further damage'
+          'Apply peptide serum to boost collagen production',
+          'Use hydrating sheet masks 1-2x weekly',
+          'Consider adding facial oils with omega fatty acids'
+        ]
+      },
+      {
+        condition: 'Flakiness',
+        severity: 'mild',
+        confidence: 0.65,
+        recommendations: [
+          'Gently exfoliate 1-2x weekly with a chemical exfoliant',
+          'Apply thick cream or balm to flaky areas',
+          'Avoid hot water which can strip skin oils'
+        ]
+      }
+    ],
+    oily: [
+      {
+        condition: 'Excess Sebum',
+        severity: 'high',
+        confidence: 0.88,
+        recommendations: [
+          'Use a foaming cleanser with salicylic acid',
+          'Apply niacinamide serum to regulate oil production',
+          'Use lightweight, oil-free moisturizers',
+          'Try clay masks 1-2x weekly'
+        ]
+      },
+      {
+        condition: 'Acne',
+        severity: 'moderate',
+        confidence: 0.82,
+        recommendations: [
+          'Use benzoyl peroxide for inflammatory acne',
+          'Apply salicylic acid to exfoliate pores',
+          'Use non-comedogenic products only'
         ]
       },
       {
         condition: 'Enlarged Pores',
-        confidence: 0.45 + (Math.random() * 0.2),
         severity: 'moderate',
+        confidence: 0.79,
         recommendations: [
-          'Use a BHA (salicylic acid) product to clear pores',
-          'Consider clay masks 1-2 times weekly',
-          'Use a non-comedogenic moisturizer',
-          'Try niacinamide to help regulate sebum and minimize pore appearance'
+          'Use products with niacinamide to tighten pores',
+          'Regular exfoliation to prevent clogging',
+          'Consider retinol to improve skin texture'
+        ]
+      }
+    ],
+    combination: [
+      {
+        condition: 'T-Zone Oiliness',
+        severity: 'moderate',
+        confidence: 0.85,
+        recommendations: [
+          'Use different products for different facial zones',
+          'Apply clay masks to T-zone only',
+          'Focus hydrating products on drier areas'
         ]
       },
       {
         condition: 'Uneven Texture',
-        confidence: 0.38 + (Math.random() * 0.2),
-        severity: 'moderate',
+        severity: 'mild',
+        confidence: 0.72,
         recommendations: [
-          'Incorporate gentle chemical exfoliation with AHAs',
-          'Consider adding a rice-based exfoliant for smoother texture',
-          'Use humectants like glycerin to improve hydration',
-          'Try a facial oil with linoleic acid if your skin is combination'
+          'Use gentle chemical exfoliants like PHAs',
+          'Incorporate balancing ingredients like niacinamide',
+          'Layer hydration in drier areas'
+        ]
+      },
+      {
+        condition: 'Occasional Breakouts',
+        severity: 'low',
+        confidence: 0.67,
+        recommendations: [
+          'Spot treat with salicylic acid or sulfur',
+          'Avoid heavy products on acne-prone areas',
+          'Keep hair products away from face'
         ]
       }
     ],
-    overall: 'Your skin shows signs of combination type with multiple concerns. The primary issues appear to be acne, dryness, and texture irregularities, with moderate redness. A customized skincare routine addressing these specific concerns would help improve your skin health.',
-    skinType: 'Combination',
+    normal: [
+      {
+        condition: 'Minor Dehydration',
+        severity: 'mild',
+        confidence: 0.65,
+        recommendations: [
+          'Maintain hydration with hyaluronic acid serums',
+          'Use a balanced moisturizer day and night',
+          'Focus on prevention and maintenance'
+        ]
+      },
+      {
+        condition: 'Early Signs of Aging',
+        severity: 'low',
+        confidence: 0.62,
+        recommendations: [
+          'Use antioxidants like vitamin C serum',
+          'Incorporate retinol for prevention',
+          'Maintain consistent UV protection'
+        ]
+      }
+    ],
+    sensitive: [
+      {
+        condition: 'Redness',
+        severity: 'moderate',
+        confidence: 0.81,
+        recommendations: [
+          'Use products with centella asiatica/madecassoside',
+          'Avoid fragrances and essential oils',
+          'Apply cooling/soothing masks regularly'
+        ]
+      },
+      {
+        condition: 'Irritation',
+        severity: 'moderate',
+        confidence: 0.78,
+        recommendations: [
+          'Use only gentle, minimal ingredient products',
+          'Incorporate ceramides to strengthen skin barrier',
+          'Avoid physical exfoliants and harsh actives'
+        ]
+      },
+      {
+        condition: 'Weakened Barrier',
+        severity: 'high',
+        confidence: 0.85,
+        recommendations: [
+          'Focus on barrier repair with ceramides and fatty acids',
+          'Minimize skincare steps to basics only',
+          'Avoid all active ingredients until healed'
+        ]
+      }
+    ]
+  };
+  
+  // Get conditions for selected skin type
+  const possibleConditions = conditionsByType[skinType];
+  
+  // Add 1-2 random conditions from other skin types for realism
+  const otherSkinTypes = skinTypes.filter(type => type !== skinType);
+  const randomOtherType = otherSkinTypes[Math.floor(Math.random() * otherSkinTypes.length)];
+  const randomOtherConditions = conditionsByType[randomOtherType];
+  
+  // Pick 1-2 random conditions from the other type
+  const numRandomConditions = Math.floor(Math.random() * 2) + 1;
+  const randomConditions = randomOtherConditions
+    .sort(() => Math.random() - 0.5)
+    .slice(0, numRandomConditions)
+    .map(condition => ({
+      ...condition,
+      confidence: condition.confidence * 0.7, // Lower confidence for non-matching skin type
+      severity: condition.severity === 'high' ? 'moderate' : (condition.severity === 'moderate' ? 'low' : 'mild')
+    }));
+  
+  // Combine conditions and sort by confidence
+  const combinedConditions = [...possibleConditions, ...randomConditions]
+    .sort((a, b) => b.confidence - a.confidence)
+    .slice(0, 3); // Take top 3 conditions
+  
+  // Create overall description
+  const overallDescriptions: Record<SkinType, string[]> = {
+    dry: [
+      'Your skin shows signs of dehydration and lacks natural oils.',
+      'Your skin barrier appears weakened, leading to moisture loss.',
+      'Your skin needs more hydration and protection against environmental stressors.'
+    ],
+    oily: [
+      'Your skin produces excess sebum, especially in the T-zone area.',
+      'Your pores appear congested with oil and debris in some areas.',
+      'Your skin produces more natural oils than needed, which may lead to shine and breakouts.'
+    ],
+    combination: [
+      'Your skin shows a mix of oily and dry areas, with more oil production in the T-zone.',
+      'Your forehead, nose and chin appear oilier, while cheeks show some dryness.',
+      'Your skin has different needs in different areas, requiring a balanced approach.'
+    ],
+    normal: [
+      'Your skin appears balanced with good circulation and even texture.',
+      'Your skin generally looks healthy with good elasticity and hydration.',
+      'Your skin has minimal concerns and just needs maintenance and protection.'
+    ],
+    sensitive: [
+      'Your skin shows signs of reactivity with some redness and irritation.',
+      'Your skin barrier appears compromised, making it more reactive to products.',
+      'Your skin is prone to inflammation and needs gentle, soothing care.'
+    ]
+  };
+  
+  const randomDescriptionIndex = Math.floor(Math.random() * overallDescriptions[skinType].length);
+  const overall = overallDescriptions[skinType][randomDescriptionIndex];
+  
+  // Create and return the analysis result
+  return {
+    skinType,
+    overall,
+    conditions: combinedConditions,
     usedAdvancedModels: false
   };
 };
 
 /**
- * Generates mock data for advanced models
+ * Generate additional data from advanced model analysis
  */
-export const generateAdvancedModelData = (): {
-  acneTypes: Record<AcneType, number>;
-  wrinkleTypes: Record<WrinkleType, number>;
-  pigmentationTypes: Record<PigmentationType, number>;
-  skinTextureTypes: Record<SkinTextureType, number>;
-  poreTypes: Record<PoreType, number>;
-  detectedObjects: DetectedObject[];
-} => {
+export const generateAdvancedModelData = () => {
+  // Detected objects (from YOLO model) - These would be skin features detected
+  const detectedObjects = [
+    { label: 'Blackheads', confidence: 0.82, count: Math.floor(Math.random() * 15) + 3 },
+    { label: 'Papules', confidence: 0.79, count: Math.floor(Math.random() * 8) + 1 },
+    { label: 'Enlarged Pores', confidence: 0.92, count: Math.floor(Math.random() * 100) + 50 },
+  ];
+  
+  // If the random number is greater than 0.5, add wrinkle detection
+  if (Math.random() > 0.5) {
+    detectedObjects.push(
+      { label: 'Fine Lines', confidence: 0.75, count: Math.floor(Math.random() * 12) + 3 }
+    );
+  }
+  
+  // If the random number is greater than 0.6, add pigmentation detection
+  if (Math.random() > 0.6) {
+    detectedObjects.push(
+      { label: 'Hyperpigmentation', confidence: 0.81, count: Math.floor(Math.random() * 5) + 1 }
+    );
+  }
+  
+  // Acne type classification (from CNN model) - These would be probabilities for each type
+  const acneTypes = {
+    hormonal: Math.random() * 0.7 + 0.3, // Between 0.3 and 1.0
+    cystic: Math.random() * 0.6,         // Between 0.0 and 0.6
+    comedonal: Math.random() * 0.8,      // Between 0.0 and 0.8
+    fungal: Math.random() * 0.3          // Between 0.0 and 0.3
+  };
+  
+  // Generate environmental factors analysis
+  const environmentalFactors: EnvironmentalFactor[] = [
+    {
+      factor: 'Humidity',
+      impact: Math.random() > 0.6 ? 'high' : 'medium',
+      recommendations: [
+        'Use a humidifier during dry months',
+        'Adjust your moisturizer based on seasonal humidity changes',
+        'Consider using hydrating mists throughout the day'
+      ]
+    },
+    {
+      factor: 'UV Exposure',
+      impact: Math.random() > 0.4 ? 'high' : 'medium',
+      recommendations: [
+        'Apply broad-spectrum SPF 30+ daily',
+        'Reapply sunscreen every 2 hours when outdoors',
+        'Seek shade during peak sun hours (10am-4pm)'
+      ]
+    },
+    {
+      factor: 'Air Pollution',
+      impact: Math.random() > 0.5 ? 'medium' : 'low',
+      recommendations: [
+        'Double cleanse in the evening to remove pollutants',
+        'Use antioxidant serums to protect from free radical damage',
+        'Consider an air purifier for your living space'
+      ]
+    }
+  ];
+  
   return {
-    acneTypes: {
-      papules: 0.15 + (Math.random() * 0.2),
-      pustules: 0.25 + (Math.random() * 0.3),
-      nodular: 0.05 + (Math.random() * 0.1),
-      cystic: 0.08 + (Math.random() * 0.15),
-      comedonal: 0.35 + (Math.random() * 0.3),
-      hormonal: 0.20 + (Math.random() * 0.3),
-      fungal: 0.02 + (Math.random() * 0.05)
-    },
-    wrinkleTypes: {
-      fine_lines: 0.4 + (Math.random() * 0.3),
-      deep_wrinkles: 0.1 + (Math.random() * 0.15),
-      crow_feet: 0.25 + (Math.random() * 0.2),
-      nasolabial_folds: 0.3 + (Math.random() * 0.25),
-      forehead_lines: 0.35 + (Math.random() * 0.25)
-    },
-    pigmentationTypes: {
-      melasma: 0.15 + (Math.random() * 0.2),
-      post_inflammatory: 0.3 + (Math.random() * 0.25),
-      sun_spots: 0.4 + (Math.random() * 0.3),
-      freckles: 0.35 + (Math.random() * 0.25),
-      age_spots: 0.2 + (Math.random() * 0.15)
-    },
-    skinTextureTypes: {
-      rough: 0.3 + (Math.random() * 0.25),
-      smooth: 0.4 + (Math.random() * 0.25),
-      uneven: 0.35 + (Math.random() * 0.25),
-      bumpy: 0.2 + (Math.random() * 0.2),
-      scaly: 0.15 + (Math.random() * 0.15),
-      dehydrated: 0.25 + (Math.random() * 0.25)
-    },
-    poreTypes: {
-      enlarged: 0.4 + (Math.random() * 0.3),
-      clogged: 0.35 + (Math.random() * 0.25),
-      normal: 0.2 + (Math.random() * 0.15),
-      minimal: 0.05 + (Math.random() * 0.1)
-    },
-    detectedObjects: [
-      {
-        label: 'acne_lesion',
-        confidence: 0.89 + (Math.random() * 0.1),
-        position: { x: 120, y: 80, width: 20, height: 20 }
-      },
-      {
-        label: 'pore',
-        confidence: 0.76 + (Math.random() * 0.1),
-        position: { x: 200, y: 150, width: 15, height: 15 }
-      },
-      {
-        label: 'scar',
-        confidence: 0.65 + (Math.random() * 0.2),
-        position: { x: 180, y: 220, width: 25, height: 15 }
-      },
-      {
-        label: 'blackhead',
-        confidence: 0.81 + (Math.random() * 0.15),
-        position: { x: 250, y: 100, width: 10, height: 10 }
-      },
-      {
-        label: 'hyperpigmentation',
-        confidence: 0.72 + (Math.random() * 0.15),
-        position: { x: 300, y: 180, width: 30, height: 20 }
-      },
-      {
-        label: 'wrinkle',
-        confidence: 0.68 + (Math.random() * 0.15),
-        position: { x: 150, y: 60, width: 40, height: 5 }
-      },
-      {
-        label: 'dry_patch',
-        confidence: 0.77 + (Math.random() * 0.15),
-        position: { x: 100, y: 130, width: 35, height: 25 }
-      },
-      {
-        label: 'enlarged_pore',
-        confidence: 0.83 + (Math.random() * 0.1),
-        position: { x: 220, y: 170, width: 8, height: 8 }
-      }
-    ]
+    detectedObjects,
+    acneTypes,
+    environmentalFactors
   };
 };

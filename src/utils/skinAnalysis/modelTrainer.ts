@@ -1,333 +1,293 @@
 
-import { Dataset, DatasetImage } from '@/types/dataset';
+import { AnalysisResult, SkinType, SkinCondition } from './types';
 import { toast } from 'sonner';
-import { AnalysisResult } from './types';
-import { preprocessImage } from './imageProcessor';
+import { enhanceAnalysisResults } from './resultEnhancer';
 
-interface TrainingProgress {
-  status: 'idle' | 'preparing' | 'training' | 'validating' | 'complete' | 'error';
-  progress: number; // 0-100
-  currentEpoch?: number;
-  totalEpochs?: number;
-  accuracy?: number;
-  error?: string;
+interface TrainedModel {
+  id: string;
+  datasetId: string;
+  name: string;
+  trainedAt: string;
+  accuracy: number;
+  parameters: {
+    epochs: number;
+    batchSize: number;
+    learningRate: number;
+  };
 }
 
-interface TrainingOptions {
+interface ModelTrainingOptions {
   epochs?: number;
-  learningRate?: number;
   batchSize?: number;
-  validationSplit?: number;
-  augmentation?: boolean;
-  onProgress?: (progress: TrainingProgress) => void;
+  learningRate?: number;
 }
 
-/**
- * Manages the training of skin analysis models based on datasets
- */
-export class ModelTrainer {
-  private trainingStatus: TrainingProgress = {
-    status: 'idle',
-    progress: 0,
-  };
-  
-  private defaultOptions: TrainingOptions = {
-    epochs: 10,
-    learningRate: 0.001,
-    batchSize: 16,
-    validationSplit: 0.2,
-    augmentation: true,
-  };
-  
+interface EnvironmentalFactor {
+  factor: string;
+  impact: 'high' | 'medium' | 'low';
+  recommendations: string[];
+}
+
+class ModelTrainer {
+  private getStoredModels(): TrainedModel[] {
+    const storedModels = localStorage.getItem('skinwise_models');
+    return storedModels ? JSON.parse(storedModels) : [];
+  }
+
+  private saveModels(models: TrainedModel[]): void {
+    localStorage.setItem('skinwise_models', JSON.stringify(models));
+  }
+
   /**
-   * Train a model using a dataset
+   * Trains a new model using images from a specific dataset
    */
-  public async trainModel(
-    dataset: Dataset, 
-    options: TrainingOptions = {}
-  ): Promise<boolean> {
-    const mergedOptions = { ...this.defaultOptions, ...options };
-    const { onProgress } = mergedOptions;
-    
+  async trainModel(
+    datasetId: string,
+    datasetName: string,
+    options: ModelTrainingOptions = {}
+  ): Promise<TrainedModel> {
     try {
-      if (dataset.images.length < 10) {
-        toast.error('Not enough images in dataset. At least 10 images are required.');
-        return false;
-      }
+      console.log(`Training model for dataset: ${datasetName} (${datasetId})`);
       
-      // Update status to preparing
-      this.updateProgress('preparing', 0, onProgress);
+      // Default options
+      const epochs = options.epochs || 10;
+      const batchSize = options.batchSize || 16;
+      const learningRate = options.learningRate || 0.001;
       
-      // Preprocess and prepare data
-      const preparedData = await this.prepareTrainingData(dataset);
+      // For prototype purposes, we'll simulate training progress
+      // This would be replaced with actual model training in a production app
       
-      // Update status to training
-      this.updateProgress('training', 10, onProgress, {
-        currentEpoch: 0,
-        totalEpochs: mergedOptions.epochs,
-      });
+      // Simulate training time based on options
+      const trainingTimeMs = epochs * 1000; // 1 second per epoch
       
-      // Simulate the training process with epochs
-      for (let epoch = 1; epoch <= (mergedOptions.epochs || 10); epoch++) {
-        // Calculate progress: 10% for preparation + 70% for training (divided by epochs)
-        const epochProgress = 10 + (epoch / (mergedOptions.epochs || 10)) * 70;
-        
-        // Update progress for current epoch
-        this.updateProgress('training', epochProgress, onProgress, {
-          currentEpoch: epoch,
-          totalEpochs: mergedOptions.epochs,
-        });
-        
-        // Simulate epoch training time
-        await new Promise(resolve => setTimeout(resolve, 1000));
-      }
+      // Simulate accuracy between 85% and 98%
+      const baseAccuracy = 0.85;
+      const maxAccuracyGain = 0.13;
+      const epochFactor = Math.min(1, epochs / 20); // Saturates at 20 epochs
+      const batchSizeFactor = Math.min(1, batchSize / 32); // Optimal around 32
+      const learningRateFactor = Math.min(1, learningRate / 0.001); // Optimal around 0.001
       
-      // Update status to validating
-      this.updateProgress('validating', 80, onProgress);
+      const accuracyMultiplier = (
+        (epochFactor * 0.5) + 
+        (batchSizeFactor * 0.3) + 
+        (learningRateFactor * 0.2)
+      );
       
-      // Simulate validation
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Add some randomness for realism
+      const randomFactor = Math.random() * 0.05;
+      const accuracy = baseAccuracy + (maxAccuracyGain * accuracyMultiplier) - randomFactor;
       
-      // Calculate simulated accuracy based on dataset size and labels diversity
-      const accuracy = this.calculateSimulatedAccuracy(dataset);
+      // Create model info
+      const model: TrainedModel = {
+        id: `model_${Date.now()}`,
+        datasetId,
+        name: `${datasetName} Model`,
+        trainedAt: new Date().toISOString(),
+        accuracy,
+        parameters: {
+          epochs,
+          batchSize,
+          learningRate
+        }
+      };
       
-      // Update status to complete
-      this.updateProgress('complete', 100, onProgress, { accuracy });
+      // Simulate training delay
+      await new Promise(resolve => setTimeout(resolve, trainingTimeMs));
       
-      // Save the "model" (in a real implementation this would be actual model weights)
-      this.saveModel(dataset.name, dataset.id);
+      // Save model to localStorage
+      const storedModels = this.getStoredModels();
+      storedModels.push(model);
+      this.saveModels(storedModels);
       
-      toast.success(`Model training complete with ${accuracy.toFixed(1)}% accuracy`);
-      return true;
-      
+      console.log(`Model training complete with ${(accuracy * 100).toFixed(2)}% accuracy`);
+      return model;
     } catch (error) {
       console.error('Error training model:', error);
-      this.updateProgress('error', 0, onProgress, { 
-        error: error instanceof Error ? error.message : 'Unknown error during training' 
-      });
-      
-      toast.error('Model training failed. Please try again.');
+      throw new Error('Model training failed');
+    }
+  }
+  
+  /**
+   * Gets a list of all trained models
+   */
+  getModels(): TrainedModel[] {
+    return this.getStoredModels();
+  }
+  
+  /**
+   * Gets a specific trained model by ID
+   */
+  getModelById(modelId: string): TrainedModel | undefined {
+    const models = this.getStoredModels();
+    return models.find(model => model.id === modelId);
+  }
+  
+  /**
+   * Gets all trained models for a specific dataset
+   */
+  getModelsForDataset(datasetId: string): TrainedModel[] {
+    const models = this.getStoredModels();
+    return models.filter(model => model.datasetId === datasetId);
+  }
+  
+  /**
+   * Deletes a trained model
+   */
+  deleteModel(modelId: string): boolean {
+    try {
+      const models = this.getStoredModels();
+      const updatedModels = models.filter(model => model.id !== modelId);
+      this.saveModels(updatedModels);
+      return true;
+    } catch (error) {
+      console.error('Error deleting model:', error);
       return false;
     }
   }
   
   /**
-   * Prepare training data from dataset
+   * Use a trained model to analyze an image
+   * In a real app, this would load and use the actual trained model
+   * For prototype purposes, we'll simulate analysis based on the model accuracy
    */
-  private async prepareTrainingData(dataset: Dataset): Promise<any> {
-    // In a real implementation, this would:
-    // 1. Convert images to tensors
-    // 2. Normalize pixel values
-    // 3. Split into training and validation sets
-    // 4. Apply data augmentation
+  async analyzeWithTrainedModel(imageData: string, datasetId: string): Promise<AnalysisResult> {
+    console.log(`Analyzing image with custom model for dataset: ${datasetId}`);
     
-    // For this prototype, we simply return the dataset
-    return dataset;
-  }
-  
-  /**
-   * Calculate a simulated accuracy based on dataset properties
-   */
-  private calculateSimulatedAccuracy(dataset: Dataset): number {
-    // Factors that would improve accuracy in a real scenario:
-    // - More images
-    // - More diverse labels/conditions
-    // - Better quality images
-    
-    // Get unique labels and conditions
-    const uniqueLabels = new Set(dataset.images.map(img => img.label));
-    const uniqueConditions = new Set(
-      dataset.images
-        .map(img => img.condition)
-        .filter(condition => condition !== undefined)
-    );
-    
-    // Basic simulation formula for accuracy
-    let baseAccuracy = 70; // Start with 70% base accuracy
-    
-    // More images improve accuracy
-    const imageCountFactor = Math.min(dataset.images.length / 50, 1) * 10;
-    
-    // More diverse labels/conditions improve accuracy
-    const diversityFactor = (uniqueLabels.size / 5) * 5 + (uniqueConditions.size / 3) * 5;
-    
-    // Severity balance improves accuracy (in a real system)
-    const severityCounts = {
-      low: 0,
-      moderate: 0,
-      high: 0,
-      undefined: 0
-    };
-    
-    dataset.images.forEach(img => {
-      const key = img.severity as keyof typeof severityCounts || 'undefined';
-      severityCounts[key]++;
-    });
-    
-    // Calculate severity balance (higher is better)
-    const totalWithSeverity = severityCounts.low + severityCounts.moderate + severityCounts.high;
-    const severityBalance = totalWithSeverity > 0 ? 
-      Math.min(
-        (severityCounts.low / totalWithSeverity) * 3,
-        (severityCounts.moderate / totalWithSeverity) * 3,
-        (severityCounts.high / totalWithSeverity) * 3
-      ) * 5 : 0;
-    
-    // Final accuracy (capped between 50% and 98%)
-    const accuracy = Math.min(
-      Math.max(
-        baseAccuracy + imageCountFactor + diversityFactor + severityBalance,
-        50
-      ),
-      98
-    );
-    
-    return accuracy;
-  }
-  
-  /**
-   * Save the trained model
-   */
-  private saveModel(modelName: string, datasetId: string): void {
-    // In a real app, this would save the model weights
-    // For this prototype, we store metadata in localStorage
-    
-    const modelInfo = {
-      name: `${modelName} Model`,
-      datasetId,
-      createdAt: new Date().toISOString(),
-      accuracy: this.trainingStatus.accuracy || 0,
-    };
-    
-    // Get existing models or initialize empty array
-    const existingModels = JSON.parse(localStorage.getItem('skinwise_models') || '[]');
-    existingModels.push(modelInfo);
-    
-    // Save updated models list
-    localStorage.setItem('skinwise_models', JSON.stringify(existingModels));
-  }
-  
-  /**
-   * Update the training progress and trigger callback if provided
-   */
-  private updateProgress(
-    status: TrainingProgress['status'],
-    progress: number,
-    onProgress?: (progress: TrainingProgress) => void,
-    additionalInfo: Partial<TrainingProgress> = {}
-  ): void {
-    this.trainingStatus = {
-      ...this.trainingStatus,
-      status,
-      progress,
-      ...additionalInfo
-    };
-    
-    if (onProgress) {
-      onProgress(this.trainingStatus);
+    // Get the most recent model for this dataset
+    const models = this.getModelsForDataset(datasetId);
+    if (!models.length) {
+      throw new Error('No trained model found for this dataset');
     }
-  }
-  
-  /**
-   * Use a trained model to analyze a new image
-   */
-  public async analyzeWithTrainedModel(
-    imageData: string,
-    datasetId: string
-  ): Promise<AnalysisResult | null> {
-    try {
-      // Check if we have a trained model for this dataset
-      const models = JSON.parse(localStorage.getItem('skinwise_models') || '[]');
-      const model = models.find((m: any) => m.datasetId === datasetId);
-      
-      if (!model) {
-        toast.error('No trained model found for this dataset');
-        return null;
-      }
-      
-      // In a real app, this would load the model and run inference
-      // For this prototype, we'll return simulated results
-      
-      // Preprocess the image first
-      const processedImageData = preprocessImage(imageData);
-      
-      // Simulate analysis time
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      // Get the dataset to see what conditions we've trained on
-      const datasets = JSON.parse(localStorage.getItem('skinwise_datasets') || '[]');
-      const dataset = datasets.find((d: any) => d.id === datasetId);
-      
-      if (!dataset) {
-        toast.error('Dataset not found');
-        return null;
-      }
-      
-      // Generate results based on the dataset's conditions
-      const uniqueConditions = new Set<string>();
-      dataset.images.forEach((img: DatasetImage) => {
-        if (img.condition) {
-          uniqueConditions.add(img.condition);
-        }
-      });
-      
-      // Create analysis result with dataset-specific conditions
-      const result: AnalysisResult = {
-        timestamp: new Date().toISOString(),
-        modelVersion: 'custom-trained-1.0',
-        usedAdvancedModels: true,
-        conditions: {},
-        recommendations: {
-          ingredients: [],
-          products: [],
-          lifestyle: []
-        }
-      };
-      
-      // Add each condition from the dataset with a random score
-      uniqueConditions.forEach(condition => {
-        result.conditions[condition] = Math.random();
-      });
-      
-      // Add default conditions if none found in dataset
-      if (Object.keys(result.conditions).length === 0) {
-        result.conditions = {
-          acne: Math.random() * 0.5,
-          dryness: Math.random() * 0.5,
-          oiliness: Math.random() * 0.5,
-          sensitivity: Math.random() * 0.5
-        };
-      }
-      
-      // Generate basic recommendations
-      result.recommendations = {
-        ingredients: [
-          'Hyaluronic Acid',
-          'Niacinamide',
-          'Vitamin C'
-        ],
-        products: [
-          'Gentle Cleanser',
-          'Moisturizer',
-          'Sunscreen'
-        ],
-        lifestyle: [
-          'Stay hydrated',
-          'Get enough sleep',
-          'Protect skin from sun damage'
+    
+    // Sort by training date desc and get the most recent
+    const model = models.sort((a, b) => {
+      return new Date(b.trainedAt).getTime() - new Date(a.trainedAt).getTime();
+    })[0];
+    
+    console.log(`Using model: ${model.name} (accuracy: ${(model.accuracy * 100).toFixed(2)}%)`);
+    
+    // Generate mock analysis results, adjusted by the model's accuracy
+    // In a real app, the model would process the image and return actual results
+    
+    // Base skin types
+    const skinTypes: SkinType[] = ['dry', 'oily', 'combination', 'normal', 'sensitive'];
+    
+    // Possible skin conditions with varying severity
+    const possibleConditions: SkinCondition[] = [
+      {
+        condition: 'Acne',
+        severity: 'moderate',
+        confidence: 0.82 * model.accuracy,
+        recommendations: [
+          'Use a gentle cleanser with salicylic acid',
+          'Apply benzoyl peroxide as a spot treatment',
+          'Consider a retinoid product for long-term management'
         ]
-      };
+      },
+      {
+        condition: 'Dryness',
+        severity: 'mild',
+        confidence: 0.65 * model.accuracy,
+        recommendations: [
+          'Use a hyaluronic acid serum to boost hydration',
+          'Apply a thicker moisturizer at night',
+          'Consider adding face oil to your routine'
+        ]
+      },
+      {
+        condition: 'Hyperpigmentation',
+        severity: 'moderate',
+        confidence: 0.78 * model.accuracy,
+        recommendations: [
+          'Use vitamin C serum daily',
+          'Apply sunscreen with at least SPF 30',
+          'Consider alpha arbutin or tranexamic acid products'
+        ]
+      },
+      {
+        condition: 'Redness',
+        severity: 'mild',
+        confidence: 0.72 * model.accuracy,
+        recommendations: [
+          'Use products with centella asiatica or green tea',
+          'Avoid harsh exfoliants and hot water',
+          'Consider azelaic acid to reduce inflammation'
+        ]
+      }
+    ];
+    
+    // Select 2-3 conditions randomly
+    const shuffledConditions = [...possibleConditions].sort(() => 0.5 - Math.random());
+    const selectedConditions = shuffledConditions.slice(0, Math.floor(Math.random() * 2) + 2);
+    
+    // Get random skin type
+    const skinType = skinTypes[Math.floor(Math.random() * skinTypes.length)];
+    
+    // Create environmental factors analysis
+    const environmentalFactors: EnvironmentalFactor[] = [
+      {
+        factor: 'Humidity',
+        impact: Math.random() > 0.6 ? 'high' : 'medium',
+        recommendations: [
+          'Use a humidifier during dry months',
+          'Adjust your moisturizer based on seasonal humidity changes',
+          'Consider using hydrating mists throughout the day'
+        ]
+      },
+      {
+        factor: 'UV Exposure',
+        impact: Math.random() > 0.4 ? 'high' : 'medium',
+        recommendations: [
+          'Apply broad-spectrum SPF 30+ daily',
+          'Reapply sunscreen every 2 hours when outdoors',
+          'Seek shade during peak sun hours (10am-4pm)'
+        ]
+      },
+      {
+        factor: 'Air Pollution',
+        impact: Math.random() > 0.5 ? 'medium' : 'low',
+        recommendations: [
+          'Double cleanse in the evening to remove pollutants',
+          'Use antioxidant serums to protect from free radical damage',
+          'Consider an air purifier for your living space'
+        ]
+      }
+    ];
+    
+    // Create the mock analysis result
+    const mockResult: AnalysisResult = {
+      skinType,
+      overall: `Your skin appears to be primarily ${skinType}, with some notable concerns that our custom model has identified.`,
+      conditions: selectedConditions,
+      usedAdvancedModels: true,
+      environmentalFactors: environmentalFactors,
       
-      toast.success('Analysis complete using your custom trained model');
-      return result;
+      // Add advanced model data for more detailed analysis
+      detectedObjects: [
+        { label: 'Pores', confidence: 0.89 * model.accuracy, count: Math.floor(Math.random() * 100) + 50 },
+        { label: 'Fine Lines', confidence: 0.76 * model.accuracy, count: Math.floor(Math.random() * 15) + 5 }
+      ],
       
-    } catch (error) {
-      console.error('Error analyzing with trained model:', error);
-      toast.error('Analysis failed. Please try again.');
-      return null;
-    }
+      // Add acne classification if acne is detected
+      acneTypes: selectedConditions.some(c => c.condition === 'Acne') 
+        ? {
+            hormonal: 0.65 * model.accuracy,
+            cystic: 0.25 * model.accuracy,
+            comedonal: 0.45 * model.accuracy,
+            fungal: 0.15 * model.accuracy
+          }
+        : undefined
+    };
+    
+    // Enhance the results with specialized recommendations
+    const enhancedResults = enhanceAnalysisResults(mockResult);
+    
+    console.log('Custom model analysis complete:', enhancedResults);
+    toast.success('Analysis with custom model complete');
+    
+    return enhancedResults;
   }
 }
 
-// Export singleton instance
+// Export a singleton instance
 export const modelTrainer = new ModelTrainer();
