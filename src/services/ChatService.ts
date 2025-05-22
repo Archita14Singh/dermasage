@@ -1,3 +1,4 @@
+
 import { Message } from '@/types/chat';
 import SkinConditionService from './SkinConditionService';
 import { AnalysisResult, EnvironmentalFactor } from '@/utils/skinAnalysis';
@@ -163,7 +164,7 @@ class ChatService {
               "5. Moisturizer: Medium-weight moisturizer (Neutrogena Hydro Boost Gel-Cream - [Amazon](https://www.amazon.com/Neutrogena-Hydro-Hyaluronic-Hydrating-Moisturizer/dp/B00NR1YQK4))";
               break;
             case 'sensitive':
-              skinTypeRecommendation = `For your sensitive skin type${name}, I recommend this comprehensive routine:\n\n" +
+              skinTypeRecommendation = `For your sensitive skin type${name}, I recommend this comprehensive routine:\n\n` +
               "MORNING:\n" +
               "1. Cleanser: Ultra-gentle cleanser (Vanicream Gentle Facial Cleanser - [Amazon](https://www.amazon.com/Vanicream-Gentle-Cleanser-sensitive-Dispenser/dp/B00QX0D94A))\n" +
               "2. Serum: Centella asiatica to calm (PURITO Centella Unscented Serum - [Amazon](https://www.amazon.com/PURITO-Centella-Unscented-Serum-Fluid/dp/B07VGWQ1SB))\n" +
