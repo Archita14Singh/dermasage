@@ -17,15 +17,17 @@ import { modelTrainer } from '@/utils/skinAnalysis/modelTrainer';
 import { Dataset } from '@/types/dataset';
 
 interface TrainModelDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
   dataset: Dataset;
+  onModelTrained: () => void;
 }
 
 const TrainModelDialog: React.FC<TrainModelDialogProps> = ({ 
-  isOpen, 
-  onClose,
-  dataset
+  open, 
+  onOpenChange,
+  dataset,
+  onModelTrained
 }) => {
   const [epochs, setEpochs] = useState(10);
   const [learningRate, setLearningRate] = useState(0.001);
@@ -57,7 +59,8 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
       if (success) {
         setStatus('Training complete!');
         setTimeout(() => {
-          onClose();
+          onOpenChange(false);
+          onModelTrained();
         }, 1500);
       } else {
         setStatus('Training failed. Please try again.');
@@ -71,7 +74,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={open => !isTraining && !open && onClose()}>
+    <Dialog open={open} onOpenChange={(open) => !isTraining && onOpenChange(open)}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Train AI Model</DialogTitle>
@@ -160,7 +163,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
         )}
         
         <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isTraining}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isTraining}>
             Cancel
           </Button>
           <Button onClick={handleTrain} disabled={isTraining}>

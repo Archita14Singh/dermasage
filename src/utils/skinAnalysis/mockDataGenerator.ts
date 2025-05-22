@@ -1,4 +1,5 @@
-import { AnalysisResult, SkinType, ConditionSeverity, SkinCondition, AcneType, DetectedObject } from './types';
+
+import { AnalysisResult, SkinType, ConditionSeverity, SkinCondition, AcneType, DetectedObject, ImpactLevel, EnvironmentalFactor } from './types';
 
 /**
  * Generates mock skin conditions for prototype
@@ -97,7 +98,7 @@ export function generateMockSkinConditions(): AnalysisResult {
  */
 export const generateAdvancedModelData = () => {
   // Detected objects (from YOLO model) - These would be skin features detected
-  const detectedObjects = [
+  const detectedObjects: DetectedObject[] = [
     { label: 'Blackheads', confidence: 0.82, count: Math.floor(Math.random() * 15) + 3 },
     { label: 'Papules', confidence: 0.79, count: Math.floor(Math.random() * 8) + 1 },
     { label: 'Enlarged Pores', confidence: 0.92, count: Math.floor(Math.random() * 100) + 50 },
@@ -126,10 +127,12 @@ export const generateAdvancedModelData = () => {
   };
   
   // Generate environmental factors analysis
+  const impactLevels: ImpactLevel[] = ['high', 'medium', 'low'];
+  
   const environmentalFactors: EnvironmentalFactor[] = [
     {
       factor: 'Humidity',
-      impact: Math.random() > 0.6 ? 'high' : 'medium',
+      impact: impactLevels[Math.floor(Math.random() * 2)],  // high or medium
       recommendations: [
         'Use a humidifier during dry months',
         'Adjust your moisturizer based on seasonal humidity changes',
