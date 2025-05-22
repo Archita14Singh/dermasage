@@ -5,42 +5,38 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
-  DialogDescription
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Slider } from '@/components/ui/slider';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
-import { Dataset } from '@/types/dataset';
 import { modelTrainer } from '@/utils/skinAnalysis/modelTrainer';
+import { Dataset } from '@/types/dataset';
 
 interface TrainModelDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
+  isOpen: boolean;
+  onClose: () => void;
   dataset: Dataset;
-  onModelTrained: () => void;
 }
 
-const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
-  open,
-  onOpenChange,
-  dataset,
-  onModelTrained
+const TrainModelDialog: React.FC<TrainModelDialogProps> = ({ 
+  isOpen, 
+  onClose,
+  dataset
 }) => {
   const [epochs, setEpochs] = useState(10);
   const [learningRate, setLearningRate] = useState(0.001);
-  const [batchSize, setBatchSize] = useState(16);
-  const [validationSplit, setValidationSplit] = useState(20); // 0-100
+  const [batchSize, setBatchSize] = useState(32);
+  const [validationSplit, setValidationSplit] = useState(0.2);
   const [augmentation, setAugmentation] = useState(true);
   const [isTraining, setIsTraining] = useState(false);
   const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState<string>('');
-  const [accuracy, setAccuracy] = useState<number | undefined>(undefined);
+  const [status, setStatus] = useState('');
   
-  const handleStartTraining = async () => {
+  const handleTrain = async () => {
     setIsTraining(true);
     setProgress(0);
     setStatus('Preparing...');
@@ -50,189 +46,126 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
         epochs,
         learningRate,
         batchSize,
-        validationSplit: validationSplit / 100,
+        validationSplit,
         augmentation,
-        onProgress: (progressData) => {
-          setProgress(progressData.progress);
-          
-          switch (progressData.status) {
-            case 'preparing':
-              setStatus('Preparing training data...');
-              break;
-            case 'training':
-              setStatus(`Training (Epoch ${progressData.currentEpoch}/${progressData.totalEpochs})...`);
-              break;
-            case 'validating':
-              setStatus('Validating model...');
-              break;
-            case 'complete':
-              setStatus('Training complete!');
-              setAccuracy(progressData.accuracy);
-              break;
-            case 'error':
-              setStatus(`Error: ${progressData.error}`);
-              break;
-            default:
-              setStatus('Processing...');
-              break;
-          }
+        onProgress: (progressData: any) => {
+          setProgress(progressData.progress * 100);
+          setStatus(progressData.status);
         }
       });
       
       if (success) {
-        onModelTrained();
-        // Keep dialog open to show results
+        setStatus('Training complete!');
+        setTimeout(() => {
+          onClose();
+        }, 1500);
+      } else {
+        setStatus('Training failed. Please try again.');
+        setIsTraining(false);
       }
     } catch (error) {
-      console.error('Error during training:', error);
-      setStatus('Training failed');
-    } finally {
+      console.error('Error training model:', error);
+      setStatus('Error training model. Please try again.');
       setIsTraining(false);
     }
   };
   
-  const handleClose = () => {
-    if (!isTraining) {
-      onOpenChange(false);
-    }
-  };
-  
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={isOpen} onOpenChange={open => !isTraining && !open && onClose()}>
+      <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Train Model from Dataset</DialogTitle>
+          <DialogTitle>Train AI Model</DialogTitle>
           <DialogDescription>
-            Train a custom skin analysis model using your dataset: {dataset.name}
+            Configure and train a custom skin analysis model using the images in "{dataset.name}".
           </DialogDescription>
         </DialogHeader>
         
-        <div className="space-y-4 py-4">
-          {!isTraining && !accuracy ? (
-            <>
+        {!isTraining ? (
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="epochs">Epochs: {epochs}</Label>
-                </div>
-                <Slider
+                <Label htmlFor="epochs">Epochs</Label>
+                <Input
                   id="epochs"
+                  type="number"
                   min={1}
-                  max={50}
-                  step={1}
-                  value={[epochs]}
-                  onValueChange={(value) => setEpochs(value[0])}
-                  disabled={isTraining}
+                  max={100}
+                  value={epochs}
+                  onChange={(e) => setEpochs(parseInt(e.target.value))}
                 />
+                <p className="text-xs text-muted-foreground">Number of training iterations</p>
               </div>
               
               <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="learning-rate">Learning Rate: {learningRate}</Label>
-                </div>
-                <Slider
-                  id="learning-rate"
+                <Label htmlFor="learningRate">Learning Rate</Label>
+                <Input
+                  id="learningRate"
+                  type="number"
                   min={0.0001}
-                  max={0.01}
-                  step={0.0001}
-                  value={[learningRate]}
-                  onValueChange={(value) => setLearningRate(value[0])}
-                  disabled={isTraining}
+                  max={0.1}
+                  step={0.001}
+                  value={learningRate}
+                  onChange={(e) => setLearningRate(parseFloat(e.target.value))}
                 />
+                <p className="text-xs text-muted-foreground">Model's learning speed</p>
               </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="batch-size">Batch Size: {batchSize}</Label>
-                </div>
-                <Slider
-                  id="batch-size"
-                  min={4}
-                  max={64}
-                  step={4}
-                  value={[batchSize]}
-                  onValueChange={(value) => setBatchSize(value[0])}
-                  disabled={isTraining}
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="validation-split">Validation Split: {validationSplit}%</Label>
-                </div>
-                <Slider
-                  id="validation-split"
-                  min={10}
-                  max={30}
-                  step={5}
-                  value={[validationSplit]}
-                  onValueChange={(value) => setValidationSplit(value[0])}
-                  disabled={isTraining}
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2 pt-2">
-                <Switch
-                  id="augmentation"
-                  checked={augmentation}
-                  onCheckedChange={setAugmentation}
-                  disabled={isTraining}
-                />
-                <Label htmlFor="augmentation">Use data augmentation</Label>
-              </div>
-              
-              <div className="pt-2">
-                <p className="text-sm text-muted-foreground">
-                  Dataset size: {dataset.images.length} images
-                </p>
-                {dataset.images.length < 10 && (
-                  <p className="text-sm text-destructive">
-                    Warning: Dataset should have at least 10 images for better results.
-                  </p>
-                )}
-              </div>
-            </>
-          ) : (
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Training Progress</Label>
-                <Progress value={progress} className="h-2" />
-              </div>
-              
-              <p className="text-center text-sm">{status}</p>
-              
-              {accuracy !== undefined && (
-                <div className="bg-muted p-4 rounded-lg text-center">
-                  <p className="text-lg font-medium">Training Complete!</p>
-                  <p className="text-2xl font-bold text-primary">{accuracy.toFixed(1)}% Accuracy</p>
-                  <p className="text-sm text-muted-foreground mt-2">
-                    Your model has been saved and is ready to use.
-                  </p>
-                </div>
-              )}
             </div>
-          )}
-        </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="batchSize">Batch Size</Label>
+                <Input
+                  id="batchSize"
+                  type="number"
+                  min={1}
+                  max={128}
+                  value={batchSize}
+                  onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                />
+                <p className="text-xs text-muted-foreground">Images per batch</p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="validationSplit">Validation Split</Label>
+                <Input
+                  id="validationSplit"
+                  type="number"
+                  min={0.1}
+                  max={0.5}
+                  step={0.1}
+                  value={validationSplit}
+                  onChange={(e) => setValidationSplit(parseFloat(e.target.value))}
+                />
+                <p className="text-xs text-muted-foreground">Portion reserved for validation</p>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-2">
+              <Checkbox 
+                id="augmentation" 
+                checked={augmentation}
+                onCheckedChange={(checked) => setAugmentation(!!checked)}
+              />
+              <Label htmlFor="augmentation">Use data augmentation</Label>
+            </div>
+          </div>
+        ) : (
+          <div className="py-6 space-y-4">
+            <Progress value={progress} className="h-2 w-full" />
+            <p className="text-center text-sm">{status}</p>
+            <p className="text-center text-xs text-muted-foreground">
+              {progress > 0 && progress < 100 ? `${Math.round(progress)}% complete` : ''}
+            </p>
+          </div>
+        )}
         
         <DialogFooter>
-          {!isTraining && !accuracy && (
-            <>
-              <Button variant="outline" onClick={handleClose} disabled={isTraining}>
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleStartTraining} 
-                disabled={isTraining || dataset.images.length < 3}
-              >
-                Start Training
-              </Button>
-            </>
-          )}
-          
-          {accuracy !== undefined && (
-            <Button onClick={handleClose}>
-              Done
-            </Button>
-          )}
+          <Button variant="outline" onClick={onClose} disabled={isTraining}>
+            Cancel
+          </Button>
+          <Button onClick={handleTrain} disabled={isTraining}>
+            {isTraining ? 'Training...' : 'Start Training'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
