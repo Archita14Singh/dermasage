@@ -2,125 +2,106 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-export interface ImageFormOptions {
+interface ImageFormOptions {
   onSuccess?: () => void;
-  initialLabel?: string;
-  initialCondition?: string;
-  initialSeverity?: 'low' | 'moderate' | 'high' | '' | 'none';
-  saveFunction?: (
+  saveFunction: (
     imageData: string,
     label: string,
     condition?: string,
-    severity?: 'low' | 'moderate' | 'high' | undefined
+    severity?: 'low' | 'moderate' | 'high',
+    productInfo?: {
+      hasProduct: boolean;
+      productName?: string;
+      productBrand?: string;
+      productType?: string;
+    }
   ) => any;
 }
 
-export const useImageForm = (options: ImageFormOptions = {}) => {
-  const {
-    onSuccess,
-    initialLabel = '',
-    initialCondition = '',
-    initialSeverity = '',
-    saveFunction
-  } = options;
-  
+export const useImageForm = (options: ImageFormOptions) => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
-  const [newImageLabel, setNewImageLabel] = useState(initialLabel);
-  const [newImageCondition, setNewImageCondition] = useState(initialCondition);
-  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | '' | 'none'>(initialSeverity);
+  const [newImageLabel, setNewImageLabel] = useState('');
+  const [newImageCondition, setNewImageCondition] = useState('');
+  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | '' | 'none'>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
-  const resetForm = () => {
-    setUploadedImage(null);
-    setNewImageLabel(initialLabel);
-    setNewImageCondition(initialCondition);
-    setNewImageSeverity(initialSeverity);
-    setSelectedFile(null);
-  };
-
-  const handleFileUpload = (file: File) => {
+  // New product-related states
+  const [hasProduct, setHasProduct] = useState(false);
+  const [productName, setProductName] = useState('');
+  const [productBrand, setProductBrand] = useState('');
+  const [productType, setProductType] = useState('');
+  
+  const handleFileUpload = async (file: File) => {
+    console.log("Processing file upload:", file.name);
     setIsLoading(true);
+    setSelectedFile(file);
     
-    if (!file) {
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        console.log("File converted to base64");
+        setUploadedImage(result);
+        setIsLoading(false);
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      toast.error('Error processing file');
       setIsLoading(false);
-      return;
     }
-
-    // Check if file is an image
-    if (!file.type.match('image.*')) {
-      toast.error('Please upload an image file');
-      setIsLoading(false);
-      return;
-    }
-    
-    const reader = new FileReader();
-    
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        console.log("File loaded successfully");
-        setUploadedImage(e.target.result.toString());
-        setSelectedFile(file);
-      }
-      setIsLoading(false);
-    };
-    
-    reader.onerror = () => {
-      console.error("File reading error");
-      toast.error('Error reading file. Please try again.');
-      setIsLoading(false);
-    };
-    
-    reader.readAsDataURL(file);
   };
   
-  const handleImageSelected = (imageData: string, file: File) => {
-    setIsLoading(true);
-    try {
-      console.log("Image selected", { fileSize: file.size, fileName: file.name });
-      setSelectedFile(file);
-      setUploadedImage(imageData);
-    } catch (error) {
-      console.error("Error in handleImageSelected", error);
-      toast.error('Error processing image');
-    } finally {
-      setIsLoading(false);
-    }
+  const resetForm = () => {
+    console.log("Resetting image form");
+    setUploadedImage(null);
+    setNewImageLabel('');
+    setNewImageCondition('');
+    setNewImageSeverity('');
+    setSelectedFile(null);
+    setHasProduct(false);
+    setProductName('');
+    setProductBrand('');
+    setProductType('');
+    setIsLoading(false);
   };
   
   const handleAddImage = async () => {
     if (!uploadedImage || !newImageLabel.trim()) {
-      toast.error('Please upload an image and provide a label');
+      toast.error('Please provide an image and label');
       return;
     }
     
     try {
-      if (saveFunction) {
-        // Convert "none" severity to undefined when saving
-        const severityValue = newImageSeverity === 'none' ? undefined : 
-                             (newImageSeverity === '' ? undefined : newImageSeverity);
-        
-        const result = await saveFunction(
-          uploadedImage,
-          newImageLabel.trim(),
-          newImageCondition.trim() || undefined,
-          severityValue
-        );
-        
-        if (result) {
-          toast.success('Image added successfully');
-          resetForm();
-          onSuccess?.();
-        }
-      } else {
-        console.warn('No save function provided to useImageForm');
-        toast.success('Image processed successfully');
+      setIsLoading(true);
+      
+      const productInfo = hasProduct ? {
+        hasProduct: true,
+        productName: productName.trim(),
+        productBrand: productBrand.trim(),
+        productType: productType
+      } : { hasProduct: false };
+      
+      const severityToSave = newImageSeverity === '' || newImageSeverity === 'none' ? undefined : newImageSeverity;
+      
+      const result = options.saveFunction(
+        uploadedImage,
+        newImageLabel.trim(),
+        newImageCondition.trim() || undefined,
+        severityToSave,
+        productInfo
+      );
+      
+      if (result) {
         resetForm();
-        onSuccess?.();
+        options.onSuccess?.();
       }
     } catch (error) {
       console.error('Error adding image:', error);
-      toast.error('Failed to process image');
+      toast.error('Failed to add image');
+    } finally {
+      setIsLoading(false);
     }
   };
   
@@ -136,8 +117,15 @@ export const useImageForm = (options: ImageFormOptions = {}) => {
     selectedFile,
     setSelectedFile,
     isLoading,
+    hasProduct,
+    setHasProduct,
+    productName,
+    setProductName,
+    productBrand,
+    setProductBrand,
+    productType,
+    setProductType,
     handleFileUpload,
-    handleImageSelected,
     resetForm,
     handleAddImage
   };

@@ -27,6 +27,15 @@ interface AddImageDialogProps {
   initialFile?: File | null;
   isLoading?: boolean;
   handleFileUpload?: (file: File) => void;
+  // New product-related props
+  hasProduct?: boolean;
+  setHasProduct?: (hasProduct: boolean) => void;
+  productName?: string;
+  setProductName?: (productName: string) => void;
+  productBrand?: string;
+  setProductBrand?: (productBrand: string) => void;
+  productType?: string;
+  setProductType?: (productType: string) => void;
 }
 
 const AddImageDialog: React.FC<AddImageDialogProps> = ({
@@ -44,7 +53,15 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
   onCancel,
   initialFile,
   isLoading = false,
-  handleFileUpload
+  handleFileUpload,
+  hasProduct = false,
+  setHasProduct,
+  productName = '',
+  setProductName,
+  productBrand = '',
+  setProductBrand,
+  productType = '',
+  setProductType
 }) => {
   useEffect(() => {
     // Process initial file if provided
@@ -73,7 +90,7 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
         onOpenChange(open);
       }}
     >
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Image to Dataset</DialogTitle>
         </DialogHeader>
@@ -93,6 +110,14 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
             setCondition={setCondition}
             severity={severity}
             setSeverity={setSeverity}
+            hasProduct={hasProduct}
+            setHasProduct={setHasProduct}
+            productName={productName}
+            setProductName={setProductName}
+            productBrand={productBrand}
+            setProductBrand={setProductBrand}
+            productType={productType}
+            setProductType={setProductType}
           />
         </div>
         <DialogFooter>

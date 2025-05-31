@@ -19,7 +19,13 @@ export class DatasetImageService extends BaseService<Dataset> {
     imageData: string, 
     label: string, 
     condition?: string, 
-    severity?: 'low' | 'moderate' | 'high'
+    severity?: 'low' | 'moderate' | 'high',
+    productInfo?: {
+      hasProduct: boolean;
+      productName?: string;
+      productBrand?: string;
+      productType?: string;
+    }
   ): DatasetImage | null {
     if (!datasetId || !imageData || !label.trim()) {
       toast.error('Missing required data for adding image');
@@ -47,14 +53,28 @@ export class DatasetImageService extends BaseService<Dataset> {
         label: label.trim(),
         condition: condition?.trim(),
         severity,
-        dateAdded: new Date()
+        dateAdded: new Date(),
+        hasProduct: productInfo?.hasProduct || false,
+        productName: productInfo?.productName?.trim(),
+        productBrand: productInfo?.productBrand?.trim(),
+        productType: productInfo?.productType as any
       };
       
       datasets[datasetIndex].images.push(newImage);
       datasets[datasetIndex].updatedAt = new Date();
       
+      // Mark dataset as including products if this image has product info
+      if (productInfo?.hasProduct) {
+        datasets[datasetIndex].includesProducts = true;
+      }
+      
       this.saveAllItems(datasets);
-      toast.success('Image added to dataset');
+      
+      if (productInfo?.hasProduct) {
+        toast.success(`Image with product "${productInfo.productName}" added to dataset`);
+      } else {
+        toast.success('Image added to dataset');
+      }
       
       return newImage;
     } catch (error) {
@@ -92,6 +112,10 @@ export class DatasetImageService extends BaseService<Dataset> {
     }
     
     dataset.updatedAt = new Date();
+    
+    // Check if dataset still includes products
+    dataset.includesProducts = dataset.images.some(img => img.hasProduct);
+    
     this.saveAllItems(datasets);
     toast.success('Image removed from dataset');
     

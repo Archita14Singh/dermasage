@@ -11,7 +11,7 @@ import AddImageDialog from './AddImageDialog';
 import ImageDetailsDialog from './ImageDetailsDialog';
 import DatasetHeader from './DatasetHeader';
 import DatasetContent from './DatasetContent';
-import TrainModelDialog from './TrainModelDialog'; // Add this import
+import TrainModelDialog from './TrainModelDialog';
 import { useImageForm } from '@/hooks/useImageForm';
 
 interface DatasetViewerProps {
@@ -25,7 +25,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
 }) => {
   const [isAddImageDialogOpen, setIsAddImageDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isTrainModelDialogOpen, setIsTrainModelDialogOpen] = useState(false); // Add this state
+  const [isTrainModelDialogOpen, setIsTrainModelDialogOpen] = useState(false);
   const [editedName, setEditedName] = useState(dataset.name);
   const [editedDescription, setEditedDescription] = useState(dataset.description);
   const [selectedImage, setSelectedImage] = useState<DatasetImage | null>(null);
@@ -36,18 +36,23 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       imageData: string,
       label: string,
       condition?: string,
-      severity?: 'low' | 'moderate' | 'high'
+      severity?: 'low' | 'moderate' | 'high',
+      productInfo?: {
+        hasProduct: boolean;
+        productName?: string;
+        productBrand?: string;
+        productType?: string;
+      }
     ) => {
-      console.log("Saving image to dataset", { datasetId: dataset.id, label });
-      // If severity is 'none', pass undefined to the service
-      const severityToSave = severity;
+      console.log("Saving image to dataset", { datasetId: dataset.id, label, productInfo });
       
       return DatasetService.addImageToDataset(
         dataset.id,
         imageData,
         label,
         condition,
-        severityToSave
+        severity,
+        productInfo
       );
     }
   };
@@ -64,6 +69,14 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     selectedFile,
     setSelectedFile,
     isLoading,
+    hasProduct,
+    setHasProduct,
+    productName,
+    setProductName,
+    productBrand,
+    setProductBrand,
+    productType,
+    setProductType,
     handleFileUpload,
     resetForm,
     handleAddImage
@@ -117,16 +130,36 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       <DatasetHeader
         dataset={dataset}
         onEditClick={() => setIsEditDialogOpen(true)}
-        onAddImageClick={handleOpenAddImageDialog}
-        onTrainModelClick={handleTrainModel}
+        onAddImageClick={() => {
+          console.log("Opening add image dialog");
+          resetForm();
+          setIsAddImageDialogOpen(true);
+        }}
+        onTrainModelClick={() => setIsTrainModelDialogOpen(true)}
       />
       
       <DatasetContent
         images={dataset.images}
         onImageSelect={setSelectedImage}
-        onImageDelete={handleDeleteImage}
-        onAddImage={handleOpenAddImageDialog}
-        onFileSelected={handleFileSelected}
+        onImageDelete={(imageId) => {
+          if (window.confirm('Are you sure you want to remove this image from the dataset?')) {
+            DatasetService.removeImageFromDataset(dataset.id, imageId);
+            onDatasetUpdated();
+            if (selectedImage?.id === imageId) {
+              setSelectedImage(null);
+            }
+          }
+        }}
+        onAddImage={() => {
+          console.log("Opening add image dialog");
+          resetForm();
+          setIsAddImageDialogOpen(true);
+        }}
+        onFileSelected={(file) => {
+          console.log("File selected in DatasetViewer", file.name);
+          setSelectedFile(file);
+          setIsAddImageDialogOpen(true);
+        }}
       />
       
       {/* Dialogs */}
@@ -137,7 +170,17 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         setName={setEditedName}
         description={editedDescription}
         setDescription={setEditedDescription}
-        onSave={handleSaveEdit}
+        onSave={() => {
+          if (editedName.trim()) {
+            DatasetService.updateDataset(dataset.id, {
+              name: editedName.trim(),
+              description: editedDescription.trim()
+            });
+            
+            onDatasetUpdated();
+            setIsEditDialogOpen(false);
+          }
+        }}
       />
       
       <AddImageDialog
@@ -151,6 +194,14 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
         setCondition={setNewImageCondition}
         severity={newImageSeverity}
         setSeverity={setNewImageSeverity}
+        hasProduct={hasProduct}
+        setHasProduct={setHasProduct}
+        productName={productName}
+        setProductName={setProductName}
+        productBrand={productBrand}
+        setProductBrand={setProductBrand}
+        productType={productType}
+        setProductType={setProductType}
         onSave={handleAddImage}
         onCancel={() => {
           console.log("Cancelling add image dialog");
@@ -165,10 +216,17 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
       <ImageDetailsDialog
         selectedImage={selectedImage}
         onOpenChange={(open) => !open && setSelectedImage(null)}
-        onDelete={handleDeleteImage}
+        onDelete={(imageId) => {
+          if (window.confirm('Are you sure you want to remove this image from the dataset?')) {
+            DatasetService.removeImageFromDataset(dataset.id, imageId);
+            onDatasetUpdated();
+            if (selectedImage?.id === imageId) {
+              setSelectedImage(null);
+            }
+          }
+        }}
       />
       
-      {/* Add Train Model Dialog */}
       <TrainModelDialog
         isOpen={isTrainModelDialogOpen}
         onOpenChange={setIsTrainModelDialogOpen}

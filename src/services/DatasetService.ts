@@ -126,9 +126,15 @@ class DatasetService extends BaseService<Dataset> {
     imageData: string, 
     label: string, 
     condition?: string, 
-    severity?: 'low' | 'moderate' | 'high'
+    severity?: 'low' | 'moderate' | 'high',
+    productInfo?: {
+      hasProduct: boolean;
+      productName?: string;
+      productBrand?: string;
+      productType?: string;
+    }
   ) {
-    return this.imageService.addImageToDataset(datasetId, imageData, label, condition, severity);
+    return this.imageService.addImageToDataset(datasetId, imageData, label, condition, severity, productInfo);
   }
   
   /**
