@@ -38,6 +38,13 @@ export interface PigmentationTypes {
   sun_spots?: number;
 }
 
+export interface LearnedProductRecommendation {
+  name: string;
+  brand?: string;
+  type?: string;
+  confidence: number;
+}
+
 export interface AnalysisResult {
   skinType: SkinType;
   overall: string;
@@ -50,4 +57,13 @@ export interface AnalysisResult {
   wrinkleTypes?: WrinkleTypes;
   pigmentationTypes?: PigmentationTypes;
   environmentalFactors?: EnvironmentalFactor[];
+  // New properties for custom model results
+  usedCustomModel?: boolean;
+  customModelInfo?: {
+    datasetId: string;
+    trainedAt: string;
+    epochs: number;
+    includesProducts: boolean;
+  };
+  learnedProductRecommendations?: LearnedProductRecommendation[];
 }
