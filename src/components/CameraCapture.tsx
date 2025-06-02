@@ -16,15 +16,23 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onCaptur
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const startCamera = useCallback(async () => {
+    if (stream) {
+      console.log('Camera already started, skipping...');
+      return;
+    }
+
     try {
       console.log('Requesting camera access...');
+      setHasError(false);
+      
       const mediaStream = await navigator.mediaDevices.getUserMedia({
         video: { 
-          facingMode: 'environment', // Use back camera on mobile
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          facingMode: 'environment',
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 }
         }
       });
       
@@ -32,12 +40,14 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onCaptur
       
       if (videoRef.current) {
         videoRef.current.srcObject = mediaStream;
-        videoRef.current.play();
+        await videoRef.current.play();
         setIsStreaming(true);
-        console.log('Camera stream started');
+        console.log('Camera stream started successfully');
       }
     } catch (error) {
       console.error('Error accessing camera:', error);
+      setHasError(true);
+      
       if (error instanceof Error) {
         if (error.name === 'NotAllowedError') {
           toast.error('Camera access denied. Please allow camera access and try again.');
@@ -50,52 +60,66 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onCaptur
         toast.error('Error accessing camera. Please try again.');
       }
     }
-  }, []);
+  }, [stream]);
 
   const stopCamera = useCallback(() => {
     if (stream) {
+      console.log('Stopping camera stream...');
       stream.getTracks().forEach(track => track.stop());
       setStream(null);
       setIsStreaming(false);
+      setHasError(false);
       console.log('Camera stream stopped');
     }
   }, [stream]);
 
   const capturePhoto = useCallback(() => {
-    if (videoRef.current && canvasRef.current) {
+    if (videoRef.current && canvasRef.current && isStreaming) {
       const video = videoRef.current;
       const canvas = canvasRef.current;
       const context = canvas.getContext('2d');
       
       if (context) {
+        // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
-        context.drawImage(video, 0, 0);
         
-        const imageData = canvas.toDataURL('image/jpeg', 0.8);
+        // Draw the video frame to canvas
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+        
+        // Convert to image data with good quality
+        const imageData = canvas.toDataURL('image/jpeg', 0.9);
         onCapture(imageData);
         handleClose();
         toast.success('Photo captured successfully!');
       }
+    } else {
+      toast.error('Camera not ready. Please wait for the camera to start.');
     }
-  }, [onCapture]);
+  }, [onCapture, isStreaming]);
 
   const handleClose = useCallback(() => {
     stopCamera();
     onClose();
   }, [stopCamera, onClose]);
 
+  // Handle dialog open/close
   React.useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !stream) {
       startCamera();
-    } else {
+    } else if (!isOpen) {
       stopCamera();
     }
-    
+  }, [isOpen]); // Only depend on isOpen
+
+  // Cleanup on unmount
+  React.useEffect(() => {
     return () => {
-      stopCamera();
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+      }
     };
-  }, [isOpen, startCamera, stopCamera]);
+  }, []); // Empty dependency array for cleanup only
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
@@ -114,11 +138,20 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onCaptur
               className="w-full h-full object-cover"
             />
             
-            {!isStreaming && (
+            {!isStreaming && !hasError && (
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="text-white text-center">
                   <Camera className="w-12 h-12 mx-auto mb-2 opacity-50" />
                   <p>Starting camera...</p>
+                </div>
+              </div>
+            )}
+
+            {hasError && (
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="text-white text-center">
+                  <X className="w-12 h-12 mx-auto mb-2 opacity-50" />
+                  <p>Camera error. Please try again.</p>
                 </div>
               </div>
             )}
@@ -131,6 +164,16 @@ const CameraCapture: React.FC<CameraCaptureProps> = ({ isOpen, onClose, onCaptur
               <Button onClick={capturePhoto} size="lg">
                 <Camera className="w-5 h-5 mr-2" />
                 Capture Photo
+              </Button>
+            )}
+            
+            {hasError && (
+              <Button onClick={() => {
+                setHasError(false);
+                startCamera();
+              }} size="lg">
+                <Camera className="w-5 h-5 mr-2" />
+                Retry Camera
               </Button>
             )}
             
