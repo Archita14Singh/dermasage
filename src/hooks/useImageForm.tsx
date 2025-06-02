@@ -22,7 +22,7 @@ export const useImageForm = (options: ImageFormOptions) => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [newImageLabel, setNewImageLabel] = useState('');
   const [newImageCondition, setNewImageCondition] = useState('');
-  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | '' | 'none'>('');
+  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | '' | 'none'>('none');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   
@@ -58,7 +58,7 @@ export const useImageForm = (options: ImageFormOptions) => {
     setUploadedImage(null);
     setNewImageLabel('');
     setNewImageCondition('');
-    setNewImageSeverity('');
+    setNewImageSeverity('none');
     setSelectedFile(null);
     setHasProduct(false);
     setProductName('');

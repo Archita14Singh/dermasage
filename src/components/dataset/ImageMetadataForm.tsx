@@ -67,7 +67,7 @@ const ImageMetadataForm: React.FC<ImageMetadataFormProps> = ({
             <SelectValue placeholder="Select severity" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="">Not specified</SelectItem>
+            <SelectItem value="none">Not specified</SelectItem>
             <SelectItem value="low">Low</SelectItem>
             <SelectItem value="moderate">Moderate</SelectItem>
             <SelectItem value="high">High</SelectItem>
