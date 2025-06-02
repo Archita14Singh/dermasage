@@ -4,6 +4,7 @@ import { Camera, Upload, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import CameraCapture from './CameraCapture';
 
 export interface ImageUploaderProps {
   onImageSelected: (imageData: string, file: File) => void;
@@ -25,6 +26,7 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   dragAndDrop = true,
 }) => {
   const [dragActive, setDragActive] = useState(false);
+  const [showCamera, setShowCamera] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleDrag = (e: React.DragEvent) => {
@@ -93,11 +95,28 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     }
   };
   
-  const handleCapture = () => {
-    if (fileInputRef.current) {
-      fileInputRef.current.capture = 'environment';
-      fileInputRef.current.click();
+  const handleCameraCapture = (imageData: string) => {
+    // Convert data URL to File for consistency
+    fetch(imageData)
+      .then(res => res.blob())
+      .then(blob => {
+        const file = new File([blob], 'camera-capture.jpg', { type: 'image/jpeg' });
+        onImageSelected(imageData, file);
+      })
+      .catch(error => {
+        console.error('Error processing camera capture:', error);
+        toast.error('Error processing captured image');
+      });
+  };
+
+  const openCamera = () => {
+    // Check if camera is available
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      toast.error('Camera not available on this device or browser');
+      return;
     }
+    
+    setShowCamera(true);
   };
   
   if (isLoading) {
@@ -139,47 +158,55 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
   }
   
   return (
-    <div 
-      className={cn(
-        "flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-xl transition-all duration-300 bg-white/50",
-        dragActive ? "border-primary bg-primary/5 scale-[1.01]" : "border-muted",
-        className
-      )}
-      onDragEnter={handleDrag}
-      onDragLeave={handleDrag}
-      onDragOver={handleDrag}
-      onDrop={handleDrop}
-    >
-      <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
-        <Upload className="w-8 h-8 text-primary" />
+    <>
+      <div 
+        className={cn(
+          "flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-xl transition-all duration-300 bg-white/50",
+          dragActive ? "border-primary bg-primary/5 scale-[1.01]" : "border-muted",
+          className
+        )}
+        onDragEnter={handleDrag}
+        onDragLeave={handleDrag}
+        onDragOver={handleDrag}
+        onDrop={handleDrop}
+      >
+        <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4">
+          <Upload className="w-8 h-8 text-primary" />
+        </div>
+        <h3 className="text-lg font-medium mb-2">Upload your image</h3>
+        <p className="text-muted-foreground mb-6 max-w-md">
+          {dragAndDrop ? 
+            "Drag and drop your photo here, or click the buttons below to upload or take a picture" : 
+            "Select or take a photo to upload"}
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button 
+            onClick={handleSelectImage}
+            className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Select Image
+          </Button>
+          <Button onClick={openCamera}>
+            <Camera className="w-4 h-4 mr-2" />
+            Take Photo
+          </Button>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={handleFileInput}
+        />
       </div>
-      <h3 className="text-lg font-medium mb-2">Upload your image</h3>
-      <p className="text-muted-foreground mb-6 max-w-md">
-        {dragAndDrop ? 
-          "Drag and drop your photo here, or click the buttons below to upload or take a picture" : 
-          "Select or take a photo to upload"}
-      </p>
-      <div className="flex flex-col sm:flex-row gap-3">
-        <Button 
-          onClick={handleSelectImage}
-          className="bg-white border border-input hover:bg-secondary text-foreground shadow-subtle"
-        >
-          <Upload className="w-4 h-4 mr-2" />
-          Select Image
-        </Button>
-        <Button onClick={handleCapture}>
-          <Camera className="w-4 h-4 mr-2" />
-          Take Photo
-        </Button>
-      </div>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        className="hidden"
-        onChange={handleFileInput}
+      
+      <CameraCapture
+        isOpen={showCamera}
+        onClose={() => setShowCamera(false)}
+        onCapture={handleCameraCapture}
       />
-    </div>
+    </>
   );
 };
 
