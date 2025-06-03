@@ -49,12 +49,6 @@ const ImageUploadSection: React.FC<ImageUploadSectionProps> = ({
   };
 
   const openCamera = () => {
-    // Check if camera is available
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      toast.error('Camera not available on this device or browser');
-      return;
-    }
-    
     setShowCamera(true);
   };
 

@@ -5,6 +5,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -93,6 +94,9 @@ const AddImageDialog: React.FC<AddImageDialogProps> = ({
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add Image to Dataset</DialogTitle>
+          <DialogDescription>
+            Upload an image and provide details to add it to your dataset for training.
+          </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <ImageUploader
