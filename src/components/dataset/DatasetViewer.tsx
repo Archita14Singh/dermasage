@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { 
   Card
@@ -32,11 +31,7 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
   const [selectedImage, setSelectedImage] = useState<DatasetImage | null>(null);
   
   const imageFormOptions = {
-    onSuccess: () => {
-      console.log('Image added successfully, updating dataset');
-      setIsAddImageDialogOpen(false);
-      onDatasetUpdated();
-    },
+    onSuccess: onDatasetUpdated,
     saveFunction: (
       imageData: string,
       label: string,
@@ -92,6 +87,28 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     setEditedDescription(dataset.description);
   }, [dataset]);
   
+  const handleSaveEdit = () => {
+    if (editedName.trim()) {
+      DatasetService.updateDataset(dataset.id, {
+        name: editedName.trim(),
+        description: editedDescription.trim()
+      });
+      
+      onDatasetUpdated();
+      setIsEditDialogOpen(false);
+    }
+  };
+  
+  const handleDeleteImage = (imageId: string) => {
+    if (window.confirm('Are you sure you want to remove this image from the dataset?')) {
+      DatasetService.removeImageFromDataset(dataset.id, imageId);
+      onDatasetUpdated();
+      if (selectedImage?.id === imageId) {
+        setSelectedImage(null);
+      }
+    }
+  };
+  
   const handleOpenAddImageDialog = () => {
     console.log("Opening add image dialog");
     resetForm();
@@ -104,12 +121,20 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
     setIsAddImageDialogOpen(true);
   };
   
+  const handleTrainModel = () => {
+    setIsTrainModelDialogOpen(true);
+  };
+  
   return (
     <Card className="h-full flex flex-col glass-card">
       <DatasetHeader
         dataset={dataset}
         onEditClick={() => setIsEditDialogOpen(true)}
-        onAddImageClick={handleOpenAddImageDialog}
+        onAddImageClick={() => {
+          console.log("Opening add image dialog");
+          resetForm();
+          setIsAddImageDialogOpen(true);
+        }}
         onTrainModelClick={() => setIsTrainModelDialogOpen(true)}
       />
       
@@ -125,8 +150,16 @@ const DatasetViewer: React.FC<DatasetViewerProps> = ({
             }
           }
         }}
-        onAddImage={handleOpenAddImageDialog}
-        onFileSelected={handleFileSelected}
+        onAddImage={() => {
+          console.log("Opening add image dialog");
+          resetForm();
+          setIsAddImageDialogOpen(true);
+        }}
+        onFileSelected={(file) => {
+          console.log("File selected in DatasetViewer", file.name);
+          setSelectedFile(file);
+          setIsAddImageDialogOpen(true);
+        }}
       />
       
       {/* Dialogs */}

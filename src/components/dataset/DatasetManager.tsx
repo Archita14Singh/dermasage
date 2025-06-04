@@ -18,16 +18,13 @@ const DatasetManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
-    console.log('DatasetManager mounted, loading datasets...');
     loadDatasets();
   }, []);
   
   const loadDatasets = () => {
     try {
-      console.log('Loading datasets...');
       setIsLoading(true);
       const loadedDatasets = DatasetService.getDatasets();
-      console.log('Loaded datasets:', loadedDatasets);
       setDatasets(loadedDatasets);
       
       // If we have a selected dataset, refresh it with the latest data
@@ -52,19 +49,14 @@ const DatasetManager: React.FC = () => {
   };
   
   const handleCreateDataset = () => {
-    if (!newDatasetName.trim()) {
-      console.log('Dataset name is empty');
-      return;
-    }
+    if (!newDatasetName.trim()) return;
     
     try {
-      console.log('Creating dataset:', newDatasetName);
       const newDataset = DatasetService.createDataset(
         newDatasetName.trim(),
         newDatasetDescription.trim()
       );
       
-      console.log('Dataset created:', newDataset);
       loadDatasets();
       setSelectedDataset(newDataset);
       setIsCreateDialogOpen(false);
@@ -78,7 +70,6 @@ const DatasetManager: React.FC = () => {
   const handleDeleteDataset = (id: string) => {
     if (window.confirm('Are you sure you want to delete this dataset? This action cannot be undone.')) {
       try {
-        console.log('Deleting dataset:', id);
         const success = DatasetService.deleteDataset(id);
         
         if (success) {
@@ -91,7 +82,6 @@ const DatasetManager: React.FC = () => {
   };
   
   const handleDatasetUpdated = () => {
-    console.log('Dataset updated, reloading...');
     loadDatasets();
   };
   
@@ -105,8 +95,6 @@ const DatasetManager: React.FC = () => {
       </div>
     );
   }
-  
-  console.log('Rendering DatasetManager with', datasets.length, 'datasets');
   
   return (
     <div className="flex flex-col gap-6 h-full">

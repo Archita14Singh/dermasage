@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-interface UseImageFormOptions {
-  onSuccess: () => void;
+interface ImageFormOptions {
+  onSuccess?: () => void;
   saveFunction: (
     imageData: string,
     label: string,
@@ -18,76 +18,93 @@ interface UseImageFormOptions {
   ) => any;
 }
 
-export const useImageForm = (options: UseImageFormOptions) => {
+export const useImageForm = (options: ImageFormOptions) => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [newImageLabel, setNewImageLabel] = useState('');
   const [newImageCondition, setNewImageCondition] = useState('');
-  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | '' | 'none'>('');
+  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | '' | 'none'>('none');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // New product-related states
   const [hasProduct, setHasProduct] = useState(false);
   const [productName, setProductName] = useState('');
   const [productBrand, setProductBrand] = useState('');
   const [productType, setProductType] = useState('');
-
-  const handleFileUpload = (file: File) => {
+  
+  const handleFileUpload = async (file: File) => {
+    console.log("Processing file upload:", file.name);
     setIsLoading(true);
-    const reader = new FileReader();
+    setSelectedFile(file);
     
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        setUploadedImage(e.target.result as string);
+    try {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        console.log("File converted to base64");
+        setUploadedImage(result);
         setIsLoading(false);
-      }
-    };
-    
-    reader.onerror = () => {
-      toast.error('Failed to read image file');
+      };
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error('Error processing file:', error);
+      toast.error('Error processing file');
       setIsLoading(false);
-    };
-    
-    reader.readAsDataURL(file);
+    }
   };
-
+  
   const resetForm = () => {
+    console.log("Resetting image form");
     setUploadedImage(null);
     setNewImageLabel('');
     setNewImageCondition('');
-    setNewImageSeverity('');
+    setNewImageSeverity('none');
     setSelectedFile(null);
     setHasProduct(false);
     setProductName('');
     setProductBrand('');
     setProductType('');
+    setIsLoading(false);
   };
-
-  const handleAddImage = () => {
+  
+  const handleAddImage = async () => {
     if (!uploadedImage || !newImageLabel.trim()) {
       toast.error('Please provide an image and label');
       return;
     }
-
-    const productInfo = hasProduct ? {
-      hasProduct: true,
-      productName: productName.trim(),
-      productBrand: productBrand.trim(),
-      productType: productType
-    } : { hasProduct: false };
-
-    const result = options.saveFunction(
-      uploadedImage,
-      newImageLabel.trim(),
-      newImageCondition.trim() || undefined,
-      newImageSeverity === '' || newImageSeverity === 'none' ? undefined : newImageSeverity,
-      productInfo
-    );
-
-    if (result) {
-      resetForm();
-      options.onSuccess();
+    
+    try {
+      setIsLoading(true);
+      
+      const productInfo = hasProduct ? {
+        hasProduct: true,
+        productName: productName.trim(),
+        productBrand: productBrand.trim(),
+        productType: productType
+      } : { hasProduct: false };
+      
+      const severityToSave = newImageSeverity === '' || newImageSeverity === 'none' ? undefined : newImageSeverity;
+      
+      const result = options.saveFunction(
+        uploadedImage,
+        newImageLabel.trim(),
+        newImageCondition.trim() || undefined,
+        severityToSave,
+        productInfo
+      );
+      
+      if (result) {
+        resetForm();
+        options.onSuccess?.();
+      }
+    } catch (error) {
+      console.error('Error adding image:', error);
+      toast.error('Failed to add image');
+    } finally {
+      setIsLoading(false);
     }
   };
-
+  
   return {
     uploadedImage,
     setUploadedImage,

@@ -29,7 +29,7 @@ const CustomModelSelector: React.FC<CustomModelSelectorProps> = ({
 }) => {
   // Function to check if a dataset has a trained model
   const hasTrainedModel = (datasetId: string) => {
-    const models = JSON.parse(localStorage.getItem('dermasage_models') || '[]');
+    const models = JSON.parse(localStorage.getItem('skinwise_models') || '[]');
     return models.some((model: any) => model.datasetId === datasetId);
   };
   

@@ -27,7 +27,7 @@ export const useSkinAnalysis = () => {
     setDatasets(loadedDatasets);
     
     // Check if there are any trained models
-    const trainedModels = JSON.parse(localStorage.getItem('dermasage_models') || '[]');
+    const trainedModels = JSON.parse(localStorage.getItem('skinwise_models') || '[]');
     
     if (trainedModels.length > 0) {
       // Find the dataset for the most recent model
@@ -104,7 +104,7 @@ export const useSkinAnalysis = () => {
   };
   
   // Calculate number of trained models
-  const trainedModelCount = JSON.parse(localStorage.getItem('dermasage_models') || '[]').length;
+  const trainedModelCount = JSON.parse(localStorage.getItem('skinwise_models') || '[]').length;
   
   return {
     image,

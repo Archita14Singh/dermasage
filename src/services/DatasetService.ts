@@ -8,7 +8,7 @@ import { DatasetImageService } from './DatasetImageService';
  * Service for managing datasets
  */
 class DatasetService extends BaseService<Dataset> {
-  private static STORAGE_KEY = 'dermasage_datasets';
+  private static STORAGE_KEY = 'skinwise_datasets';
   private imageService: DatasetImageService;
   
   constructor() {
