@@ -2,8 +2,8 @@
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-interface ImageFormOptions {
-  onSuccess?: () => void;
+interface UseImageFormOptions {
+  onSuccess: () => void;
   saveFunction: (
     imageData: string,
     label: string,
@@ -18,93 +18,76 @@ interface ImageFormOptions {
   ) => any;
 }
 
-export const useImageForm = (options: ImageFormOptions) => {
+export const useImageForm = (options: UseImageFormOptions) => {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [newImageLabel, setNewImageLabel] = useState('');
   const [newImageCondition, setNewImageCondition] = useState('');
-  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | '' | 'none'>('none');
+  const [newImageSeverity, setNewImageSeverity] = useState<'low' | 'moderate' | 'high' | '' | 'none'>('');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  
-  // New product-related states
   const [hasProduct, setHasProduct] = useState(false);
   const [productName, setProductName] = useState('');
   const [productBrand, setProductBrand] = useState('');
   const [productType, setProductType] = useState('');
-  
-  const handleFileUpload = async (file: File) => {
-    console.log("Processing file upload:", file.name);
+
+  const handleFileUpload = (file: File) => {
     setIsLoading(true);
-    setSelectedFile(file);
+    const reader = new FileReader();
     
-    try {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        console.log("File converted to base64");
-        setUploadedImage(result);
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        setUploadedImage(e.target.result as string);
         setIsLoading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch (error) {
-      console.error('Error processing file:', error);
-      toast.error('Error processing file');
+      }
+    };
+    
+    reader.onerror = () => {
+      toast.error('Failed to read image file');
       setIsLoading(false);
-    }
+    };
+    
+    reader.readAsDataURL(file);
   };
-  
+
   const resetForm = () => {
-    console.log("Resetting image form");
     setUploadedImage(null);
     setNewImageLabel('');
     setNewImageCondition('');
-    setNewImageSeverity('none');
+    setNewImageSeverity('');
     setSelectedFile(null);
     setHasProduct(false);
     setProductName('');
     setProductBrand('');
     setProductType('');
-    setIsLoading(false);
   };
-  
-  const handleAddImage = async () => {
+
+  const handleAddImage = () => {
     if (!uploadedImage || !newImageLabel.trim()) {
       toast.error('Please provide an image and label');
       return;
     }
-    
-    try {
-      setIsLoading(true);
-      
-      const productInfo = hasProduct ? {
-        hasProduct: true,
-        productName: productName.trim(),
-        productBrand: productBrand.trim(),
-        productType: productType
-      } : { hasProduct: false };
-      
-      const severityToSave = newImageSeverity === '' || newImageSeverity === 'none' ? undefined : newImageSeverity;
-      
-      const result = options.saveFunction(
-        uploadedImage,
-        newImageLabel.trim(),
-        newImageCondition.trim() || undefined,
-        severityToSave,
-        productInfo
-      );
-      
-      if (result) {
-        resetForm();
-        options.onSuccess?.();
-      }
-    } catch (error) {
-      console.error('Error adding image:', error);
-      toast.error('Failed to add image');
-    } finally {
-      setIsLoading(false);
+
+    const productInfo = hasProduct ? {
+      hasProduct: true,
+      productName: productName.trim(),
+      productBrand: productBrand.trim(),
+      productType: productType
+    } : { hasProduct: false };
+
+    const result = options.saveFunction(
+      uploadedImage,
+      newImageLabel.trim(),
+      newImageCondition.trim() || undefined,
+      newImageSeverity === '' || newImageSeverity === 'none' ? undefined : newImageSeverity,
+      productInfo
+    );
+
+    if (result) {
+      resetForm();
+      options.onSuccess();
     }
   };
-  
+
   return {
     uploadedImage,
     setUploadedImage,

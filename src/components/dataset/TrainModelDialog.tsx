@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -109,6 +108,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
         
         {!isTraining ? (
           <div className="grid gap-4 py-4">
+            
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="epochs">Epochs</Label>
