@@ -8,7 +8,7 @@ import { BaseService } from './BaseService';
  */
 export class DatasetImageService extends BaseService<Dataset> {
   constructor() {
-    super('skinwise_datasets');
+    super('dermasage_datasets');
   }
   
   /**
