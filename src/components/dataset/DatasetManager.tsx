@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -14,52 +15,68 @@ const DatasetManager: React.FC = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [newDatasetName, setNewDatasetName] = useState('');
   const [newDatasetDescription, setNewDatasetDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
     loadDatasets();
   }, []);
   
   const loadDatasets = () => {
-    const loadedDatasets = DatasetService.getDatasets();
-    setDatasets(loadedDatasets);
-    
-    // If we have a selected dataset, refresh it with the latest data
-    if (selectedDataset) {
-      const updatedDataset = loadedDatasets.find(d => d.id === selectedDataset.id);
-      if (updatedDataset) {
-        setSelectedDataset(updatedDataset);
-      } else {
-        // If the selected dataset no longer exists, select the first dataset
-        setSelectedDataset(loadedDatasets.length > 0 ? loadedDatasets[0] : null);
+    try {
+      setIsLoading(true);
+      const loadedDatasets = DatasetService.getDatasets();
+      setDatasets(loadedDatasets);
+      
+      // If we have a selected dataset, refresh it with the latest data
+      if (selectedDataset) {
+        const updatedDataset = loadedDatasets.find(d => d.id === selectedDataset.id);
+        if (updatedDataset) {
+          setSelectedDataset(updatedDataset);
+        } else {
+          // If the selected dataset no longer exists, select the first dataset
+          setSelectedDataset(loadedDatasets.length > 0 ? loadedDatasets[0] : null);
+        }
+      } 
+      // Select the first dataset if one exists and none is selected
+      else if (loadedDatasets.length > 0 && !selectedDataset) {
+        setSelectedDataset(loadedDatasets[0]);
       }
-    } 
-    // Select the first dataset if one exists and none is selected
-    else if (loadedDatasets.length > 0 && !selectedDataset) {
-      setSelectedDataset(loadedDatasets[0]);
+    } catch (error) {
+      console.error('Error loading datasets:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
   
   const handleCreateDataset = () => {
     if (!newDatasetName.trim()) return;
     
-    const newDataset = DatasetService.createDataset(
-      newDatasetName.trim(),
-      newDatasetDescription.trim()
-    );
-    
-    loadDatasets();
-    setSelectedDataset(newDataset);
-    setIsCreateDialogOpen(false);
-    setNewDatasetName('');
-    setNewDatasetDescription('');
+    try {
+      const newDataset = DatasetService.createDataset(
+        newDatasetName.trim(),
+        newDatasetDescription.trim()
+      );
+      
+      loadDatasets();
+      setSelectedDataset(newDataset);
+      setIsCreateDialogOpen(false);
+      setNewDatasetName('');
+      setNewDatasetDescription('');
+    } catch (error) {
+      console.error('Error creating dataset:', error);
+    }
   };
   
   const handleDeleteDataset = (id: string) => {
     if (window.confirm('Are you sure you want to delete this dataset? This action cannot be undone.')) {
-      const success = DatasetService.deleteDataset(id);
-      
-      if (success) {
-        loadDatasets();
+      try {
+        const success = DatasetService.deleteDataset(id);
+        
+        if (success) {
+          loadDatasets();
+        }
+      } catch (error) {
+        console.error('Error deleting dataset:', error);
       }
     }
   };
@@ -67,6 +84,17 @@ const DatasetManager: React.FC = () => {
   const handleDatasetUpdated = () => {
     loadDatasets();
   };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading datasets...</p>
+        </div>
+      </div>
+    );
+  }
   
   return (
     <div className="flex flex-col gap-6 h-full">

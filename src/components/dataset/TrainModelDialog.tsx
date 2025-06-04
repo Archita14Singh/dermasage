@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Progress } from '@/components/ui/progress';
 import { modelTrainer } from '@/utils/skinAnalysis/modelTrainer';
 import { Dataset } from '@/types/dataset';
+import { toast } from 'sonner';
 
 interface TrainModelDialogProps {
   isOpen: boolean;
@@ -39,6 +40,11 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
   const [status, setStatus] = useState('');
   
   const handleTrain = async () => {
+    if (dataset.images.length < 5) {
+      toast.error('You need at least 5 images to train a model');
+      return;
+    }
+    
     setIsTraining(true);
     setProgress(0);
     setStatus('Preparing...');
@@ -58,28 +64,46 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
       
       if (success) {
         setStatus('Training complete!');
+        toast.success('Model trained successfully!');
         setTimeout(() => {
           onOpenChange(false);
           onModelTrained();
+          resetDialog();
         }, 1500);
       } else {
         setStatus('Training failed. Please try again.');
+        toast.error('Training failed. Please try again.');
         setIsTraining(false);
       }
     } catch (error) {
       console.error('Error training model:', error);
       setStatus('Error training model. Please try again.');
+      toast.error('Error training model. Please try again.');
       setIsTraining(false);
     }
   };
   
+  const resetDialog = () => {
+    setProgress(0);
+    setStatus('');
+    setIsTraining(false);
+  };
+  
+  const handleClose = () => {
+    if (!isTraining) {
+      onOpenChange(false);
+      resetDialog();
+    }
+  };
+  
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !isTraining && onOpenChange(open)}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Train AI Model</DialogTitle>
           <DialogDescription>
             Configure and train a custom skin analysis model using the images in "{dataset.name}".
+            You currently have {dataset.images.length} images in this dataset.
           </DialogDescription>
         </DialogHeader>
         
@@ -94,7 +118,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
                   min={1}
                   max={100}
                   value={epochs}
-                  onChange={(e) => setEpochs(parseInt(e.target.value))}
+                  onChange={(e) => setEpochs(parseInt(e.target.value) || 1)}
                 />
                 <p className="text-xs text-muted-foreground">Number of training iterations</p>
               </div>
@@ -108,7 +132,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
                   max={0.1}
                   step={0.001}
                   value={learningRate}
-                  onChange={(e) => setLearningRate(parseFloat(e.target.value))}
+                  onChange={(e) => setLearningRate(parseFloat(e.target.value) || 0.001)}
                 />
                 <p className="text-xs text-muted-foreground">Model's learning speed</p>
               </div>
@@ -123,7 +147,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
                   min={1}
                   max={128}
                   value={batchSize}
-                  onChange={(e) => setBatchSize(parseInt(e.target.value))}
+                  onChange={(e) => setBatchSize(parseInt(e.target.value) || 1)}
                 />
                 <p className="text-xs text-muted-foreground">Images per batch</p>
               </div>
@@ -137,7 +161,7 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
                   max={0.5}
                   step={0.1}
                   value={validationSplit}
-                  onChange={(e) => setValidationSplit(parseFloat(e.target.value))}
+                  onChange={(e) => setValidationSplit(parseFloat(e.target.value) || 0.2)}
                 />
                 <p className="text-xs text-muted-foreground">Portion reserved for validation</p>
               </div>
@@ -151,6 +175,14 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
               />
               <Label htmlFor="augmentation">Use data augmentation</Label>
             </div>
+            
+            {dataset.images.length < 5 && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-md p-3">
+                <p className="text-sm text-yellow-800">
+                  ⚠️ You need at least 5 images to train a model. Currently you have {dataset.images.length} images.
+                </p>
+              </div>
+            )}
           </div>
         ) : (
           <div className="py-6 space-y-4">
@@ -163,10 +195,13 @@ const TrainModelDialog: React.FC<TrainModelDialogProps> = ({
         )}
         
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isTraining}>
+          <Button variant="outline" onClick={handleClose} disabled={isTraining}>
             Cancel
           </Button>
-          <Button onClick={handleTrain} disabled={isTraining}>
+          <Button 
+            onClick={handleTrain} 
+            disabled={isTraining || dataset.images.length < 5}
+          >
             {isTraining ? 'Training...' : 'Start Training'}
           </Button>
         </DialogFooter>
