@@ -24,8 +24,10 @@ export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisR
       loadSkinAnalysisModel('yolo-detection')
     ]);
     
-    // Initialize the analysis result
+    // Initialize the analysis result with required properties
     let analysisResult: AnalysisResult = {
+      skinType: 'normal', // Default value, will be updated by AI analysis
+      overall: 'Initial analysis in progress...', // Default value, will be updated
       conditions: [],
       usedAdvancedModels: true,
       detectedObjects: [],
