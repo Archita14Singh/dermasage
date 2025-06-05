@@ -11,73 +11,99 @@ import { AIModelService } from '@/services/AIModelService';
  * Analyzes a skin image and returns detailed analysis results using real CNN and YOLO models
  */
 export const analyzeSkinCondition = async (imageData: string): Promise<AnalysisResult> => {
-  console.log('Analyzing skin condition with real AI models...');
+  console.log('Analyzing skin condition with AI models...');
   
   try {
-    // First load the general model
-    await loadSkinAnalysisModel('general');
-    
-    // Load real CNN and YOLO models
-    console.log('Loading CNN and YOLO models...');
-    await Promise.all([
-      loadSkinAnalysisModel('cnn-classification'),
-      loadSkinAnalysisModel('yolo-detection')
-    ]);
-    
     // Initialize the analysis result with required properties
     let analysisResult: AnalysisResult = {
       skinType: 'normal', // Default value, will be updated by AI analysis
       overall: 'Initial analysis in progress...', // Default value, will be updated
       conditions: [],
-      usedAdvancedModels: true,
+      usedAdvancedModels: false, // Start as false, set to true if AI models work
       detectedObjects: [],
       environmentalFactors: []
     };
     
+    // Try to use real AI models first
+    let usingRealAI = false;
     try {
-      // Run real CNN classification
-      console.log('Running CNN classification...');
-      const cnnResults = await AIModelService.classifyWithCNN(imageData);
-      analysisResult.conditions = cnnResults;
+      console.log('Attempting to load and use real AI models...');
       
-      // Run real YOLO object detection
+      // Try to initialize AI models
+      await AIModelService.initializeModels();
+      
+      console.log('AI models initialized, running CNN classification...');
+      const cnnResults = await AIModelService.classifyWithCNN(imageData);
+      
       console.log('Running YOLO object detection...');
       const yoloResults = await AIModelService.detectWithYOLO(imageData);
+      
+      // If we get here, AI models worked
+      analysisResult.conditions = cnnResults;
       analysisResult.detectedObjects = yoloResults;
+      analysisResult.usedAdvancedModels = true;
+      usingRealAI = true;
       
-      // Generate environmental factors analysis
-      analysisResult.environmentalFactors = generateEnvironmentalFactorsAnalysis();
-      
-      // Add some additional mock data for other specialized analysis
-      const additionalData = generateAdvancedModelData();
-      analysisResult = { ...analysisResult, ...additionalData };
-      
-      // Enhance the analysis results with specialized recommendations
-      const enhancedResults = enhanceAnalysisResults(analysisResult);
+      console.log('Real AI analysis successful:', { cnnResults, yoloResults });
       
       toast.success('Real AI analysis complete', {
-        description: 'CNN and YOLO models have analyzed your skin successfully'
+        description: 'CNN and YOLO models analyzed your skin successfully'
       });
       
-      console.log('Real AI analysis complete:', enhancedResults);
-      return enhancedResults;
-      
     } catch (aiError) {
-      console.error('Error with real AI models, falling back to mock data:', aiError);
-      toast.warning('AI models unavailable, using backup analysis');
+      console.error('Real AI models failed, using fallback analysis:', aiError);
+      usingRealAI = false;
       
-      // Fallback to mock data if AI models fail
-      const mockResult = generateMockSkinConditions();
-      mockResult.usedAdvancedModels = false;
-      mockResult.environmentalFactors = generateEnvironmentalFactorsAnalysis();
-      
-      return enhanceAnalysisResults(mockResult);
+      toast.warning('Using fallback analysis', {
+        description: 'AI models unavailable, providing alternative analysis'
+      });
     }
     
+    // If AI models failed, use mock data
+    if (!usingRealAI) {
+      console.log('Using mock analysis data...');
+      const mockResult = generateMockSkinConditions();
+      analysisResult.conditions = mockResult.conditions;
+      analysisResult.skinType = mockResult.skinType;
+      analysisResult.overall = mockResult.overall;
+      analysisResult.usedAdvancedModels = false;
+    }
+    
+    // Generate environmental factors analysis (always available)
+    analysisResult.environmentalFactors = generateEnvironmentalFactorsAnalysis();
+    
+    // Add additional analysis data
+    const additionalData = generateAdvancedModelData();
+    analysisResult = { ...analysisResult, ...additionalData };
+    
+    // Enhance the analysis results with specialized recommendations
+    const enhancedResults = enhanceAnalysisResults(analysisResult);
+    
+    console.log('Final analysis results:', enhancedResults);
+    return enhancedResults;
+    
   } catch (error) {
-    console.error('Error analyzing skin condition:', error);
-    toast.error('An error occurred during skin analysis. Please try again.');
-    throw new Error('Analysis failed');
+    console.error('Critical error in skin analysis:', error);
+    toast.error('Analysis failed. Please try again.');
+    
+    // Return a basic fallback result instead of throwing
+    const fallbackResult: AnalysisResult = {
+      skinType: 'normal',
+      overall: 'Unable to complete full analysis. Please try again with a clearer image.',
+      conditions: [
+        {
+          condition: 'Analysis Error',
+          severity: 'low',
+          confidence: 0.1,
+          recommendations: ['Please try uploading a clearer, well-lit image', 'Ensure your face is visible and centered']
+        }
+      ],
+      usedAdvancedModels: false,
+      detectedObjects: [],
+      environmentalFactors: generateEnvironmentalFactorsAnalysis()
+    };
+    
+    return fallbackResult;
   }
 };
 
