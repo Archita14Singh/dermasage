@@ -1,5 +1,6 @@
 
 import { toast } from 'sonner';
+import { AIModelService } from '@/services/AIModelService';
 
 // Model state management
 let modelInitialized = false;
@@ -35,49 +36,49 @@ export const loadSkinAnalysisModel = async (modelType: ModelType = 'general') =>
   }
   
   // Create a new loading promise
-  loadingPromise = new Promise<boolean>((resolve, reject) => {
+  loadingPromise = new Promise<boolean>(async (resolve, reject) => {
     try {
-      // Determine loading time based on model type (simulating different complexities)
-      const loadingTime = 
-        modelType === 'general' ? 1000 : 
-        modelType === 'yolo-detection' ? 2000 :
-        modelType === 'cnn-classification' ? 2500 : 
-        modelType === 'wrinkle-detection' ? 1800 :
-        modelType === 'pigmentation-analysis' ? 2200 :
-        modelType === 'skin-texture-analysis' ? 1700 :
-        modelType === 'pore-analysis' ? 1600 : 1500;
-                         
-      // Show toast for more complex models
-      if (modelType !== 'general') {
+      // Show loading toast for complex models
+      if (modelType === 'cnn-classification' || modelType === 'yolo-detection') {
         toast.info(`Loading ${modelType} model...`, {
-          description: "Please wait while we initialize the advanced skin analysis capabilities",
-          duration: loadingTime
+          description: "Initializing real AI models for advanced skin analysis",
+          duration: 5000
         });
       }
       
-      // Simulate model loading with a more reliable approach
-      const loadTimeout = setTimeout(() => {
-        console.log(`Skin analysis model (${modelType}) loaded successfully`);
-        modelInitialized = true;
+      // Initialize real AI models for CNN and YOLO
+      if (modelType === 'cnn-classification' || modelType === 'yolo-detection') {
+        await AIModelService.initializeModels();
+      } else {
+        // For other model types, simulate loading (these would be additional specialized models)
+        const loadingTime = 
+          modelType === 'general' ? 1000 : 
+          modelType === 'wrinkle-detection' ? 1800 :
+          modelType === 'pigmentation-analysis' ? 2200 :
+          modelType === 'skin-texture-analysis' ? 1700 :
+          modelType === 'pore-analysis' ? 1600 : 1500;
         
-        // Add this model type to loaded types
-        if (!loadedModelTypes.includes(modelType)) {
-          loadedModelTypes.push(modelType);
-        }
-        
-        loadingPromise = null;
-        resolve(true);
-        
-        // Clear the timeout to prevent memory leaks
-        clearTimeout(loadTimeout);
-        
-        // Show success toast for complex models
-        if (modelType !== 'general') {
-          toast.success(`${modelType} model loaded successfully`, {
-            description: "Advanced skin analysis capabilities are now available"
-          });
-        }
-      }, loadingTime);
+        await new Promise(resolve => setTimeout(resolve, loadingTime));
+      }
+      
+      console.log(`Skin analysis model (${modelType}) loaded successfully`);
+      modelInitialized = true;
+      
+      // Add this model type to loaded types
+      if (!loadedModelTypes.includes(modelType)) {
+        loadedModelTypes.push(modelType);
+      }
+      
+      loadingPromise = null;
+      resolve(true);
+      
+      // Show success toast for complex models
+      if (modelType === 'cnn-classification' || modelType === 'yolo-detection') {
+        toast.success(`${modelType} model loaded successfully`, {
+          description: "Real AI model is now ready for advanced skin analysis"
+        });
+      }
+      
     } catch (error) {
       console.error(`Error loading skin analysis model (${modelType}):`, error);
       toast.error(`Failed to load the ${modelType} skin analysis model. Please try again.`);
@@ -90,12 +91,15 @@ export const loadSkinAnalysisModel = async (modelType: ModelType = 'general') =>
   return loadingPromise;
 };
 
-// Load multiple model types at once with expanded model types
+// Load multiple model types at once with real AI models
 export const loadAllModels = async () => {
   try {
-    await loadSkinAnalysisModel('general');
-    await loadSkinAnalysisModel('yolo-detection');
+    // Load real AI models first
     await loadSkinAnalysisModel('cnn-classification');
+    await loadSkinAnalysisModel('yolo-detection');
+    
+    // Load other specialized models
+    await loadSkinAnalysisModel('general');
     await loadSkinAnalysisModel('wrinkle-detection');
     await loadSkinAnalysisModel('pigmentation-analysis');
     await loadSkinAnalysisModel('skin-texture-analysis');

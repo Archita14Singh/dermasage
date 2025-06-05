@@ -21,16 +21,19 @@ type ClientProfile = {
 export class SkinConditionService {
   static async analyzeImage(imageData: string, useAdvancedModels = true): Promise<AnalysisResult> {
     try {
-      // Load models based on analysis type
       if (useAdvancedModels) {
-        // Start loading all models in parallel, don't wait
-        loadAllModels();
+        // Load real CNN and YOLO models
+        console.log('Loading real AI models (CNN + YOLO)...');
+        await loadAllModels();
+        toast.info('Real AI models loaded', {
+          description: 'Using CNN and YOLO for advanced skin analysis'
+        });
       } else {
-        // Just load the basic model and wait for it
+        // Just load the basic model
         await loadSkinAnalysisModel();
       }
       
-      // Analyze the image
+      // Analyze the image with real AI models
       const results = await analyzeSkinCondition(imageData);
       return results;
     } catch (error) {
